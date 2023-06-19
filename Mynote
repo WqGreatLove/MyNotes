@@ -1,3 +1,15 @@
+日报形式：
+#185824：兼容模式下，启用禁用约束模块，当使用DISABLE VALIDATE禁用约束后，使用copy from可以导入数据，应报错
+开始时间：2023-05-30
+结束时间：2023-05-30
+描述：完成copy from可以导入数据，DISABLE VALIDATE禁用约束
+
+#185575：兼容模式下，启用禁用约束模块，当表唯一键（主键）被外键依赖时，uxdb可以禁用成功，oracle报错
+开始时间：2023-05-30
+结束时间：2023-05-31
+描述：分析依赖关系调用
+
+
 报销流程：李悦
 发票报销：王淼
 
@@ -157,6 +169,30 @@ mysql: (192.71.0.243 root/123456)
   cd /home/mysql/mysql157/bin
   ./mysql -uroot -p 123456		//登陆后，使用mysql数据库: use mysql
 
+rpm安装方式：
+http://c.biancheng.net/view/7616.html
+在下面链接安装以下rpm：
+https://dev.mysql.com/downloads/mysql/
+mysql-community-common-5.7.29-1.el7.x86_64.rpm
+mysql-community-libs-5.7.29-1.el7.x86_64.rpm
+mysql-community-client-5.7.29-1.el7.x86_64.rpm
+mysql-community-server-5.7.29-1.el7.x86_64.rpm
+mysql-community-devel-5.7.29-1.el7.x86_64.rpm
+
+使用以下方式启动数据库：
+sudo systemctl start mysqld
+
+mysql初始化数据库：
+mysqld --initialize --user=mysql --datadir=/mnt/sdc/mysql
+
+登录数据库：
+查看初始密码（如果没有初始密码，直接输入用户名 root 登录即可）：
+cat /var/log/mysqld.log | grep 'temporary password is generated'
+本次初始密码：
+uYu:cWess7/4
+
+2、查看mysql版本
+mysql -V
 
 
 uxdb通过fdw访问mysql数据库：
@@ -214,23 +250,32 @@ ORACLE:(192.71.0.244 oracle/123456)
   执行sqlplus / as sysdba进入管理员模式
 达梦:(192.71.0.245 root/123456)
   cd /dm8/bin 
-  启动服务：./DmServiceTest start 
+  启动服务：./DmServiceTest start （或./DmServiceDMSERVER restart）
   启动客户端：./disql
 
-金仓:(192.71.0.248 root/123456)
+dm登录：
+进入bin目录，执行./disql
+用户名：sysdba
+密码：123456789(或者默认)
+
+金仓:(192.72.1.122 root/123456)
   cd /opt/Kingbase/ES/V8/Server/bin 
   创建实例：./initdb -W -D testdb
   启动服务端：./sys_ctl -D testdb -l logfile start
    目录：/opt/Kingbase/ES/V8/ClientTools/bin 
   启动客户端：./ksql -d test -p 54328
 
+
 2020-06-15
 
-一、数据位置
-
+一、工作记录
+redmine:
 1、我的密码
 redmine/git/svn 账号/密码:1413014046.wq
 wangqi/1qaz!QAZ
+
+2、开发设计模板
+http://cd.uxsino.com:19503/projects/dev_uxdb/wiki/%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3%E6%A8%A1%E6%9D%BF%EF%BC%88%E5%85%BC%E5%AE%B9%E5%8A%9F%E8%83%BD%EF%BC%89
 
 我的服务号：
 服务 #80869
@@ -825,10 +870,14 @@ debug_print_parse
 14、系统命令
 centoes系统：
 查看已安装包：
+sudo yum list installed|grep readline
+查看可安装的包：
 yum list|grep gssapi
 
 ubuntu系统：
 查看已安装包：
+apt list --installed | grep readline
+或者
 dpkg --list|grep gssapi
 查看可安装包：
 apt list|grep uuid
@@ -868,6 +917,40 @@ hao_xingang@uxsino.com
 文件编辑，鼠标不能拷贝
 解决方法：打开文件，进入编辑模式，输入以下命令：
 set mouse-=a
+
+20、dpkg命令
+dpkg -i + deb包		//安装命令
+dpkg -l |grep + 包名关键字			//查看已安装包
+sudo dpkg -r +包名关键字			//卸载软件包，保留配置信息
+sudo dpkg -P +包名关键字			//卸载软件包，不保留配置
+
+
+
+21、shell脚本
+
+1）、调试脚本：shell脚本开头添加set -x
+2）、错误检查：set -e 开启错误检查
+
+22、
+重载service服务：
+sudo systemctl daemon-reload
+
+指定用户执行脚本
+sudo -u uxdb sh /opt/uxsinodb-2.1/bin/configure.sh start
+
+init.d启用禁用服务：
+sudo update-rc.d uxinodb defaults
+sudo update-rc.d uxinodb remove
+控制服务的启动、停止和重启：
+sudo service uxinodb start
+sudo service uxinodb stop
+sudo service uxinodb restart
+
+
+
+
+
+
 
 2020-07-08
 
@@ -1111,8 +1194,25 @@ ORDER BY ux_relation_size(s.indexrelid) DESC;
 select ux_database.datname, ux_database_size(ux_database.datname) AS size from ux_database;
 select ux_database.datname, ux_size_pretty(ux_database_size(ux_database.datname)) AS size from ux_database; 这个可以带单位
 
+查看函数repeat_test的owner：
+SELECT proname, ux_get_userbyid(proowner) AS owner
+FROM ux_proc
+WHERE proname = 'repeat_test';
 
+语句块使用：
+DO $$
+DECLARE
+	xml_parser text;			//定义变量
+BEGIN
+  -- 创建 XML 解析器
+  xml_parser := DBMS_XMLPARSER.newParser();
 
+  -- 释放 XML 解析器
+  PERFORM DBMS_XMLPARSER.freeParser(xml_parser);
+END;
+$$;
+
+注意点：没返回值的函数，在语句块中，通过PERFORM调用，否则会报错；
 
 
 
@@ -2225,6 +2325,7 @@ uxdb-2.1/src/Makefile.global.in			//注释掉代码：
 echo 123456 | sudo -S setcap cap_setuid+ep '/home/uxdb/uxdbinstall/dbsql/bin/uxdb'
 还有以下路径也需要删除：
 uxdb-2.1/src/backend/Makefile
+src/Makefile.global
 编译：
 ./build.sh --release=standard --license=commercial --version=2.1.1.4 --nouxfs/
 
@@ -2250,6 +2351,10 @@ mvn -Dpljava.libjvmdefault=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.342.b07-0.p01.k
 
 uos系统编译，以下参数有问题
 --with-pam --with-gssapi  --with-systemd
+
+编译报错处理：
+1、对于-Werror报错，相关问题单：
+184625 
 
 
 
@@ -2308,6 +2413,14 @@ bb3cee1c568b95e41a746a5cb341534c2f1a08d6
 打包：
 银河麒麟V10+aarch64、中科方德4.0+海光x64、银河麒麟V10+龙芯 mips
 
+uxcloud:
+http://10.1.106.210/#/dashboard
+http://10.1.106.220/#/Center/111
+http://10.1.106.211/#/Center/111			//是arm的uxcloud
+http://10.1.106.230/#/Center/111
+http://10.1.106.240/#/Center/111
+用户名/密码：admin/123456
+
 北京服务器：
 10.1.106.61   uxdb/Uxsino@123       银河麒麟V10+aarch64
 10.1.106.233  uxdb/123123           中科方德4.0+海光x64
@@ -2332,6 +2445,18 @@ kylin10/x86_64：
 10.1.108.128  kylin10/x86_64      root UX15Bdtwx/AOk=2022 uxdb UXgWjYKJHl+ig=2022 port:46722
 UOS/申威：
 10.1.106.183  申威  UOS    root/Uxisno@2021  uxdb/Uxsino@2022 端口号22
+
+10.1.108.52   ubuntu20/x86_64    root/UXmey/L/X/Zkw=2022  uxdb/UXxLG7d59/H7c=2022  ssh端口46722
+
+中标麒麟7：
+10.1.106.67 uxdb   uxdb   UXQt>Eb_FF9MK22022   port:46722
+
+麒麟V10+arm		192.30.0.54			uxdb/Uxsino@1234
+
+Kylinv4 + arm 192.30.0.50
+
+Kylinv4 + x86： 
+10.1.106.92   uxdb/Uxsino@123           银河麒麟V4_x86+海光x64
 
 文件编辑，鼠标不能拷贝
 解决方法：打开文件，进入编辑模式，输入以下命令：
@@ -3256,10 +3381,7 @@ dm：
 启动达梦：
 ./dbserver ini文件
 
-dm登录：
-进入bin目录，执行./disql
-用户名：sysdba
-密码：123456789(或者默认)
+
 
 
 
@@ -9430,10 +9552,10 @@ create view v_test(col1) as select rowid from tb;
 2022-03-30
 申威平台打包
 1、
-10.1.106.183   root/Uxsino@2021  uxdb/Uxsino@2021
+10.1.106.183   root/Uxsino@2021  uxdb/Uxsino@2022
 
 
-10.1.106.181   root/Uxsino@2021  uxdb/Uxsino@2021
+10.1.106.181   root/Uxsino@2021  uxdb/Uxsino@2022
 
 
 
@@ -11490,6 +11612,7 @@ set jit = on；
 /home/uxdb/uxdb_devel/uxdb-ng/uxdb-2.1/src/backend/executor/execExprInterp.c
 /home/uxdb/uxdb_devel/uxdb-ng/uxdb-2.1/src/backend/jit/llvm/llvmjit_expr.c
 
+rpm命令：
 linux已安装软件命令：
 rpm -qa|grep llvm
 卸载安装包：
@@ -12597,11 +12720,94 @@ cstring_to_text		//char转text
 通过创建插件pageinspect，获取块元组详细信息：
 create extension pageinspect;
 
+扫描表信息函数：
+
+ScanKeyInit：
+
+ScanKeyInit(&skey, Anum_ux_index_indrelid, BTEqualStrategyNumber, F_OIDEQ, ObjectIdGetDatum(tableoid));（索引通过tableoid查找ux_index中相关行数据）
+ScanKeyInit用于初始化一个扫描键skey，Anum_ux_index_indrelid表示索引元组中 "indrelid" 字段的索引号，
+BTEqualStrategyNumber表示比较操作符类型（等于操作符），F_OIDEQ对应扫描键indrelid的类型，ObjectIdGetDatum(tableoid))，表示要查找比较表的唯一标识符，
+也就是与第二个参数Anum_ux_index_indrelid比较
+
+systable_beginscan 函数接受以下参数：
+indrel = table_open(IndexRelationId, AccessShareLock);
+indscan = systable_beginscan(indrel, IndexIndrelidIndexId, true, NULL, 1, &skey);
+relation：要进行扫描的系统表的关系对象（Relation）。
+indexId：指定要使用的索引的标识符，用于加速扫描。如果不需要索引加速，可以传递 InvalidOid。
+indexOK：指示是否允许使用索引进行扫描。如果为 true，则在扫描过程中可以使用索引获取匹配的元组。如果为 false，则仅进行顺序扫描。
+snapshot：表示扫描使用的快照（Snapshot）对象。如果为 NULL，则使用当前事务的快照。
+nkeys 和 key：表示扫描键（ScanKey）的数量和数组，用于指定过滤条件。可以根据需要传递多个扫描键进行过滤。
+
+systable_getnext 函数逐个获取系统表的元组，while (HeapTupleIsValid(htup = systable_getnext(indscan)))
+Form_ux_index index = (Form_ux_index)GETSTRUCT(htup);		//通过GETSTRUCT获取元组信息
+
+SearchSysCache2：
+SearchSysCache2(int cacheId, Datum key1, Datum key2)
+cacheId：表示要搜索的缓存的标识符（Oid）。每个缓存都有一个唯一的标识符，用于区分不同的缓存。
+key1 和 key2：表示缓存条目的搜索键（ScanKey）。缓存条目的搜索键是一组限制条件，用于过滤出符合条件的缓存条目。
+执行SearchSysCache2，需要释放cache，通过函数ReleaseSysCache(tp);
+eg：
+HeapTuple tp = SearchSysCache2(ATTNUM, ObjectIdGetDatum(tableoid), Int16GetDatum(i + 1));		//表示搜索pg_attribute中表oid为tableoid，列编号了i+1，因为列从1开始向上编号；
+然后通过以下方式获取元组信息
+if (HeapTupleIsValid(tp))
+{
+	Form_ux_attribute att_tup = (Form_ux_attribute)GETSTRUCT(tp);
+}
+
+int natts = get_relnatts(tableoid);			//获取表属性个数
+
+DirectFunctionCall2Coll：
+DirectFunctionCall2Coll(UXFunction func, Oid collation, Datum arg1, Datum arg2)	//内核中执行函数func，arg1，arg2为函数func的两个参数
+
+copy form内核代码调用栈：
+CopyFrom
+	NextCopyFrom
+		NextCopyFromRawFields
+			CopyReadLine
+				CopyReadLineText
+					CopyLoadRawBuf
+						CopyGetData
+
+
+自动生成oid：
+GetNewRelFileNode			//ux_class生成relfilenode
 
 wal日志：
 
 1、相关问题单
 108463、
+
+#隐式转换相关
+
+select int4(B'110');		//int4(B'110'),意思将bit类型转化为int4
+隐式转换与操作符优先级，当存在需要隐式转换的操作时，先执行隐式转换，然后再执行操作符函数；
+
+
+pg使用手册：
+1、guc参数使用
+log_destination：该参数定义了日志的输出目的地。可以将其设置为 'stderr'，以将日志输出到标准错误流 (stderr)。
+
+logging_collector：该参数用于启用日志收集器，它将数据库日志写入一个单独的日志文件。
+log_statement：该参数定义了哪些 SQL 语句将被记录到日志中。可以设置为 'all'，以记录所有 SQL 语句。
+log_duration：该参数定义了是否记录 SQL 语句的执行时间。可以将其设置为 on，以记录执行时间。
+log_line_prefix：该参数定义了每行日志消息的前缀格式。可以将其设置为 '[%p] %m'，以包含进程 ID 和消息内容。
+
+
+log_min_messages	//调试sql，log日志中可以显示sql详细信息
+
+语法：
+CREATE TABLE ... (LIKE ... INCLUDING ALL)
+
+系统表相关信息：
+objid 字段表示依赖关系的源对象的 OID（对象标识符）。这是发起依赖的对象，也称为依赖的对象或依赖项。
+例如，如果一个视图依赖于一个表，那么视图的 OID 将出现在 objid 字段中。
+refobjid 字段表示依赖关系的目标对象的 OID。这是被依赖的对象，也称为依赖目标。继续上述示例，如果一个视图依赖于一个表，那么表的 OID 将出现在 refobjid 字段中。
+
+
+
+
+
+
 
 
 防疫：
@@ -13105,7 +13311,7 @@ CREATE SERVER redis_server
     OPTIONS (address '127.0.0.1', port '6379');
 	
 4、创建redis中存储catid/nums映射的虚拟表
-CREATE FOREIGN TABLE rd_categories1 (key text, val text)
+CREATE FOREIGN TABLE rd_categories (key text, val text)
             SERVER redis_server
             OPTIONS (database '0');
 
@@ -13146,20 +13352,11 @@ insert into categories values('123', 'ces', 0);    --插入一条数据
 
 redis不带触发器：
 
-
-CREATE EXTENSION redis_fdw;    --创建redis_fdw扩展
-CREATE SERVER redis_server
-    FOREIGN DATA WRAPPER redis_fdw
-    OPTIONS (address '127.0.0.1', port '6379');
-CREATE USER MAPPING FOR PUBLIC SERVER redis_server OPTIONS ( password 'secret');
-CREATE FOREIGN TABLE rd_categories (key text, val text)
-            SERVER redis_server
-            OPTIONS (database '0');
-
+redis_fdw测试用例：
 CREATE EXTENSION redis_fdw;
 CREATE SERVER redis_server
     FOREIGN DATA WRAPPER redis_fdw
-    OPTIONS (address '192.71.0.139', port '6379');
+    OPTIONS (address '127.0.0.1', port '6379');
 CREATE USER MAPPING FOR PUBLIC SERVER redis_server OPTIONS ( password 'secret');
 CREATE FOREIGN TABLE rd_categories (key text, val text) SERVER redis_server OPTIONS (database '0');
 insert into rd_categories values ('a', '111');
@@ -13174,6 +13371,13 @@ insert into rd_categories values('fcc', '1');
 "123"
 127.0.0.1:6379> get 123
 "0"
+
+redis命令：
+
+切换指定库：
+SELECT 15
+清空所用表数据：
+FLUSHALL
 
 
 oracle_fdw:
@@ -13202,6 +13406,8 @@ Latest commit number:5abc858e03e4a6946ef75983aebe4d47268c4c28
 
 
 #175604:redis_fdw适配,The branch that adapts redis_fdw is REL_12_STABLE,Latest commit number:5abc858e03e4a6946ef75983aebe4d47268c4c28
+
+redis_fdw适配对应pg对应版本，eg：REL_12_STABLE分支对应pg12，同理REL_15_STABLE对应pg15
 
 
 2023-2-2
@@ -13439,21 +13645,6 @@ p *(A_Const*)(((A_Expr*)(((SelectStmt*)((RawStmt *)raw_parsetree_list->head->dat
 
 2023-03-09
 
-bit类型等于一个值的时候，不加引号，好改吗 。
-create  table t1(id  bit);
-select * from  t1  where id =1; 
-
-
-bit类型：
-
-mysql中bit类型一般都是使用整数类型表示，所以支持的bit位数最大只能是64位。而在pg中有专门的bit类型bit(范围1～83886080)，以及可变长度的bit类型varbit。
-
-区别一：
-插入值， mysql可以获取到， uxdb不能；
-
-
-
-
 
 create  table t1(id  bit(3));
 insert into t1 values(B'001');
@@ -13623,6 +13814,10 @@ select * from t1 where id != 0::bool;
 select * from t1 where id <= 0::bool;
 select * from t1 where id < 0::bool;
 
+设计方案：
+1、mysql bit类型精度与uxdb的区别
+2、mysql还支持哪些类型操作符，（还支持哪些操作符类型比较）；
+
 
 2023-03-24
 
@@ -13693,7 +13888,7 @@ sudo yum install unixODBC-devel.x86_64 -y
 
 
 1、oracle的描述
-2、我们可以用cron的功能去实现增加对应的DBA_JOB系统表或视图，内部调用cron相关的函数去实现
+2、我们可以用cron的功能去实现增加对应的DBA_JOB系统表或视图，内部调用cron相关的函数去实现L
 3、但是难点在于要实现上面定时器的相关函数，工作量大
 4、现场目前只使用了这个DBA_JOB系统表进行查询，系统表的数据维护需要相关函数，也可以直接插入数据
 
@@ -13865,15 +14060,1107 @@ alias_name:
 
 在2115C分支，麒麟v10 arm平台适配；
 
+
 问题：
 1、启动uxdb容器后，如何删除该容器
 执行命令：
 sudo docker ps -a			//查看启动的docker进程；
 sudo docker rm -f  xxx		//杀死指定docker进程；
 
+整理输出：
+麒麟v10 arm平台基于centos镜像；
+
 
 
 参考资料：
 https://www.ruanyifeng.com/blog/2018/02/docker-tutorial.html
 
+docker能够将所需的软件包及其依赖项打包成容器，并在不同的平台上运行。
+不过，不能在不同cpu的架构运行，由于不同的 CPU 架构之间存在差异，
+例如：它们具有不同的指令集和寄存器等；
+
+
+2023-04-07
+
+切换到root时，yum可以正常执行，使用sudo时，yum就有问题
+
+这个问题可能是由于sudo用户环境变量配置不正确导致的。可以尝试以下几个解决方案：
+
+1.使用sudo -i命令切换到root用户，这将会完全切换到root用户的环境。
+
+2.尝试在/etc/sudoers文件中配置Defaults env_keep += "PYTHONPATH"，这将保留PYTHONPATH环境变量并在sudo用户中设置正确的Python路径。
+
+3.如果您已经使用了以上两种方法但仍然无法解决问题，请检查您的PYTHONPATH环境变量是否正确配置，并使用echo $PYTHONPATH命令检查。
+
+4.如果PYTHONPATH环境变量未正确配置，请在sudo用户的.bashrc文件中设置正确的PYTHONPATH环境变量，或者将PYTHONPATH添加到sudo命令的命令行中。
+
+5.最后，您可以尝试重新安装yum和相关的依赖项，以确保所有文件都已正确安装并配置。
+
+
+2023-04-10
+
+
+打包：
+./build.sh --version=2.1.1.5C --license=commercial --nouxfs --extended_parameters --block-size=4
+
+JA01070578202220398 电科云项目号
+
+
+问题：
+sysbench测试UXDB性能和mysql差距较大：
+安装sysbench：
+安装依赖：
+yum install automake libtool –y
+
+
+目的：
+找到方法、并优化；
+
+系统环境：
+centos x86
+数据库版本：
+MySQL5.7.29  hotfix/ver2.1.1.4p
+
+其他问题记录：
+benchmark，读多写少场景，MySQL也优于UXDB（需要测试验证下）
+
+参数解释：
+--table_size				//表示表的行数
+oltp_write_only 参数：用于运行一个只写的 OLTP 基准测试。这将模拟一个高度并发的写入负载，通常用于测试数据库的写入性能。
+使用 oltp_write_only 参数时，不能使用 oltp_read_write 参数，因为后者包含了读取操作。
+
+prepare 命令：用于准备数据库以进行基准测试。该命令将创建所需的表和数据，并将其加载到数据库中，以便进行测试。
+
+--percentile 参数：用于指定要计算的百分位数。例如，如果您希望计算 99.9% 的响应时间，可以使用 --percentile=99.9 参数。sysbench 默认计算 95% 的响应时间。
+
+--report-interval 参数：用于指定报告结果的时间间隔，以秒为单位。例如，如果您希望每 10 秒报告一次结果，则可以使用 --report-interval=10 参数。sysbench 默认每秒报告一次结果。
+
+oltp_read_only 参数：用于运行一个只读的 OLTP 基准测试。这将模拟一个高并发的读取负载，通常用于测试数据库的读取性能。使用 oltp_read_only 参数时，不能使用 oltp_write_only 参数，因为后者包含了写入操作。
+
+run 命令：用于运行基准测试。在使用 run 命令之前，必须使用 prepare 命令来准备数据库。
+
+准备sql：
+uxdb:
+sysbench --db-driver=pgsql --pgsql-host=127.0.0.1 --pgsql-port=5432 --pgsql-user=uxdb --pgsql-db=uxdb --pgsql-password=1qaz\!QAZ --table_size=50000000 --tables=8 --events=0 --time=600  --threads=4  oltp_write_only prepare
+
+mysql：
+sysbench --db-driver=mysql --mysql-host=localhost --mysql-port=3308 --mysql-user=root --mysql-db=mysql --mysql-password=1qaz\!QAZ --table_size=50000000 --tables=8 --events=0 --time=600  --threads=4  oltp_write_only prepare
+
+执行sql：
+uxdb：
+sysbench --db-driver=pgsql --pgsql-host=127.0.0.1 --pgsql-port=5432 --pgsql-user=uxdb --pgsql-db=uxdb --pgsql-password=1qaz\!QAZ --table_size=50000000 --tables=8 --events=0 --time=600   --threads=8 --percentile=95 --report-interval=60 oltp_read_only run  >> ./log/sysbench_oltpX_8_20230411.log
+
+sysbench --db-driver=pgsql --pgsql-host=127.0.0.1 --pgsql-port=5432 --pgsql-user=uxdb --pgsql-db=uxdb --pgsql-password=1qaz\!QAZ --table_size=50000000 --tables=8 --events=0 --time=600   --threads=16 --percentile=95 --report-interval=60 oltp_read_only run  >> ./log/sysbench_oltpX_16_20230411.log
+
+sysbench --db-driver=pgsql --pgsql-host=127.0.0.1 --pgsql-port=5432 --pgsql-user=uxdb --pgsql-db=uxdb --pgsql-password=1qaz\!QAZ --table_size=50000000 --tables=8 --events=0 --time=600   --threads=32 --percentile=95 --report-interval=60 oltp_read_only run  >> ./log/sysbench_oltpX_32_20230411.log
+
+sysbench --db-driver=pgsql --pgsql-host=127.0.0.1 --pgsql-port=5432 --pgsql-user=uxdb --pgsql-db=uxdb --pgsql-password=1qaz\!QAZ --table_size=50000000 --tables=8 --events=0 --time=600   --threads=100 --percentile=95 --report-interval=60 oltp_read_only run  >> ./log/sysbench_oltpX_100_20230411.log
+
+mysql：
+sysbench --db-driver=mysql --mysql-host=localhost --mysql-port=3308 --mysql-user=root --mysql-db=mysql --mysql-password=1qaz\!QAZ --table_size=50000000 --tables=8 --events=0 --time=600   --threads=8 --percentile=95 --report-interval=60 oltp_read_only run  >> ./log/sysbench_oltpX_8_20230411.log
+
+sysbench --db-driver=mysql --mysql-host=localhost --mysql-port=3308 --mysql-user=root --mysql-db=mysql --mysql-password=1qaz\!QAZ --table_size=50000000 --tables=8 --events=0 --time=600   --threads=16 --percentile=95 --report-interval=60 oltp_read_only run  >> ./log/sysbench_oltpX_16_20230411.log
+
+sysbench --db-driver=mysql --mysql-host=localhost --mysql-port=3308 --mysql-user=root --mysql-db=mysql --mysql-password=1qaz\!QAZ --table_size=50000000 --tables=8 --events=0 --time=600   --threads=32 --percentile=95 --report-interval=60 oltp_read_only run  >> ./log/sysbench_oltpX_32_20230411.log
+
+
+
+输出结果：
+
+events：各个线程执行操作的平均数量；
+
+机器：
+ssh -p 60225 uxdb@117.34.70.110
+密码：
+uxdb/Uxsino@1234
+
+
+| datadir       | /var/lib/mysql/ |
+| basedir       | /usr/ |
+
+my.cnf配置报错：
+
+------------------innodb
+innodb_data_file_path           = ibdata1:100M:autoextend
+innodb_undo_tablespaces = 3
+#------------------- log-
+删除带路径的参数
+
+117.34.70.110机器修改记录：
+1、
+[root@localhost ~]# ll /uxdbdata/
+total 3372896
+drwx------. 20 mysql mysql       4096 Feb  6 17:00 compatible
+drwx------. 20 mysql mysql       4096 Aug 24  2022 compatible_bad1
+drwx------. 20 mysql mysql       4096 Aug 23  2022 compatible_bak_bak
+-rw-rw-r--.  1 mysql mysql 3453696911 Nov  1 17:11 linuxx64_12201_database.zip
+drwx------. 20 mysql mysql       4096 Jul 11  2022 mppworker5
+drwx------. 20 mysql mysql       4096 Jul 11  2022 mppworker5_2
+drwx------. 20 mysql mysql       4096 Jul 11  2022 mppworker5_3
+drwx------. 20 mysql mysql       4096 Jul 12  2022 mppworker5_5
+drwx------. 20 mysql mysql       4096 Jul 11  2022 mppworker5_bak
+drwxr-x---.  3 mysql mysql        228 Apr 11 17:24 mysql
+-rw-------.  1 mysql mysql          0 Aug 23  2022 nohup.out
+drwxrwxr-x.  2 mysql mysql        113 Jul 11  2022 tpccs
+-rw-rw-r--.  1 mysql mysql     113459 Jul 12  2022 tpccs_225.zip
+2、
+
+修改安全上下文类型：
+查看：
+ls -Z /var/lib/mysql
+ls -Z /var/log/mysql
+ls -Z /uxdbdata/mysql
+
+修改：
+修改成功命令：
+sudo chcon -Rv --type=mysql_log_t /var/log/mysql
+sudo chcon -Rv --type=mysqld_db_t /uxdbdata/mysql
+未验证命令：
+sudo semanage fcontext -a -t mysqld_db_t '/uxdbdata/mysql(/.*)?'
+
+3、mysql在非/var/lib路径下初始化集簇，服务器启动报错：
+原因：尝试多种方法，修改属组、修改安全上下文类型等方式，发现selinux对这块有做限制；
+修改方法：
+sudo vi /etc/sysconfig/selinux
+将SELINUX的值更改为disabled：
+原始值是SELINUX=enforcing
+
+2023-04-12
+
+性能分析：
+1、先测试机器瓶颈（如cpu、io）
+通过以下命令查看：
+查看cpu利用率：
+top -c#		//查看%Cpu(s):数值
+查看io瓶颈：
+iostat -x 10 60 -d sdc			//-d指定数据所在分区盘名称，60表示测试60s，10表示间隔10s统计一次数据，如果%util达到100%，说明磁盘io到达瓶颈；
+
+
+性能测试：
+1、清理内存
+清理cache：
+sync：将文件系统缓存数据同步到磁盘中，防止数据丢失。
+echo 1 > /proc/sys/vm/drop_caches		//：清除 PageCache （页面缓存）。
+echo 2 > /proc/sys/vm/drop_caches		//：清除 PageCache 和 dentries （目录缓存）。
+echo 3 > /proc/sys/vm/drop_caches		//：清除 PageCache、dentries 和 inodes （索引节点缓存）
+
+
+性能测试：
+ssh -p 60225 uxdb@117.34.70.110
+uxdb/Uxsino@1234
+
+
+
+
+2023-04-13
+
+qt安装环境：
+中标麒麟Linux服务器5.0（mips64el）安装QT开发环境
+
+qt相关问题单：
+173757 
+
+qt 5.9.8安装：
+
+一、源码安装
+1、下载地址
+https://download.qt.io/archive/qt/5.9/5.9.8/single/
+
+configure前安装依赖库：
+expat-devel、fontconfig-devel、freetype-devel、glib2-devel、gl-manpages、libdrm-devel、libICE-devel、libjpeg-turbo-devel、libSM-devel-1.2.2-2、libX11-devel、libXau-devel、libxcb-devel、libXdamage-devel、libXext-devel、libXfixes-devel、libXi-devel、libXxf86vm-devel、mesa-libEGL-devel、mesa-libGL-devel、pcre-devel、pkgconfig、xorg-x11-proto-devel、zlib-devel
+
+qt编译命令：
+./configure -no-opengl -opensource -confirm-license -prefix /opt/Qt5.9.8 -nomake examples -nomake tests
+
+
+./configure -no-opengl -opensource -confirm-license -release -qt-zlib -qt-libpng -qt-libjpeg -qt-freetype -qt-harfbuzz -qt-pcre -nomake examples -nomake tests mips64el-neokylin-linux-g++
+
+现场编译命令（现场命令可以编译成功，最终用的这个命令）：
+./configure -prefix /opt/Qt-5.9/qt5.9.8 -release -opensource -nomake tests -nomake examples -confirm-license -shared -qt-zlib -pch -gui -make libs -make tools
+
+2、编译驱动
+
+步骤一：先rebrand驱动psql，需要修改rebrand脚本文件substitution.data，添加PSQL为UXSQL
+
+步骤二：
+修改头文件：
+./qtbase/src/sql/kernel/qsqldriver.h
+QSqlDriver类中添加宏UXSQL
+修改代码：
+将QSqlDriver类PSQL引用改为UXSQL
+src\plugins\sqldrivers\uxsql\qsql_uxsql.cpp
+
+步骤三：编译
+编译路径：
+qt-everywhere-opensource-src-5.9.8/qtbase/src/plugins/sqldrivers/uxsql
+修改编译文件uxsql.pro：
+添加以下两行变量：
+INCLUDEPATH += "/opt/uxdbinstall/include"
+LIBS += -L/opt/uxdbinstall/lib -luxsql
+步骤四：
+编译命令(可以手动修改驱动名称)：
+qmake uxsql.pro
+make
+make install
+
+报错：
+1）
+报错信息：
+psql库不存在（未找到）
+解决方法：
+将文件psql.pro下面这一行注释：
+QMAKE_USE += psql
+
+
+
+二、安装包安装
+https://hpzwl.blog.csdn.net/article/details/123840699
+
+
+
+qt安装机器：
+10.1.106.9 root/Uxsino@2021
+
+qt驱动测试：
+qmake test_uxsql_qt.pro
+make
+./test_uxsql_qt
+
+
+
+解决问题：
+1、解决指针转int精度问题：错误：从‘void*’到‘int’的转换损失精度
+在makefile中，添加以下参数：
+CXXFLAGS="-fpermissive"
+
+2、添加库路径
+export LD_LIBRARY_PATH=/usr/lib64/:/usr/lib/:$LD_LIBRARY_PATH
+
+
+
+在使用 GCC 编译器时，你可以在 Makefile 中加入 -Wno-pointer-to-int-cast 选项。
+
+
+
+
+`疑难问题解决：`
+
+1、yum源问题
+问题：
+yum源无法下载需要的库（对于头文件或者缺少哪个库依赖哪个源，通过百度或者gpt搜索）
+
+解决方法：
+步骤一：先确定需要哪个源库（通过报错，在百度或者gpt搜索对应的库源）
+步骤二：查看yum源文件
+例如：中标麒麟（cpu 龙芯（mips64））（NeoKylin Military Server 5.0 ）
+对应源文件路径：/etc/yum.repos.d/neokylin.repo
+yum源链接：http://download.cs2c.com.cn/neokylin/server/releases/5.2/ls_64/os/V5.2-Build10.8/
+
+工作内容：
+2023/4.17-4.21
+#182593：兼容mysql数据库bit类型比较操作符
+#129384：qt5.9.8、qt5.6.2部署
+#183028：北华商舟.net适配
+#169347：支持云上贵州.net问题
+
+
+2023-04-20
+
+使npgsql在linux可以使用：
+centos x86:
+步骤：
+1、centos安装.net运行环境
+见链接：
+https://learn.microsoft.com/zh-cn/dotnet/core/install/linux-centos
+
+sudo yum install dotnet-sdk-5.0
+
+kylin v10 x86安装dotnet：
+sudo yum install dotnet-sdk-3.1.x86_64
+
+查看dotnet版本、及安装路径：
+dotnet --list-sdks
+
+2、在npgsql源码路径下执行：
+生成dll驱动：
+dotnet build -c Release Npgsql.sln
+
+
+创建一个新的 .NET Core 项目或打开一个现有项目，将 Npgsql.dll 添加到项目引用
+dotnet add <项目名称>.csproj reference <Npgsql.dll路径>
+<Npgsql.dll路径>应替换为实际生成的 Npgsql.dll 文件的路径。
+
+3、修改program.cs工程文件，将测试代码添加到工程文件中
+工程测试代码：
+
+using System;
+using Npgsql;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        try
+        {
+            using (var conn = new NpgsqlConnection("Host=myserver;Username=mylogin;Password=mypassword;Database=mydatabase"))
+            {
+                conn.Open();
+                Console.WriteLine("Connection successful!");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Connection failed: " + ex.Message);
+        }
+    }
+}
+
+实际操作步骤：
+
+拉取npgsql分支代码：
+git clone https://github.com/npgsql/npgsql.git
+
+查看sdk版本，确定npgsql版本，切换分支：
+查看dotnet版本、及安装路径：
+dotnet --list-sdks
+git checkout tags/v7.0.1
+
+编译命令：
+dotnet build -c Release Nuxsql.sln -p:FrameworkPathOverride=/usr/share/dotnet/sdk
+
+生成路径：
+./src/Npgsql/bin/Release/net7.0/Npgsql.dll
+
+
+nuxsql驱动测试用例：
+1、创建控制台应用程序：
+dotnet new console -o testapp
+
+2、工程引用驱动库：
+如果是Npgsql：
+dotnet add package Npgsql --version 5.0.0
+
+如果是Nuxsql:
+修改工程文件<项目名称>.csproj，
+<ItemGroup>
+  <Reference Include="Nuxsql.dll路径">
+  </Reference>
+</ItemGroup>
+
+需要安装依赖项有两种方式：
+1）、可以修改工程文件<项目名称>.csproj，添加以下内容：
+<ItemGroup>
+  <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+</ItemGroup>
+
+2）、也可以通过命令安装：
+dotnet add package Microsoft.Extensions.Logging.Abstractions
+
+3、编写Program.cs文件
+4、运行工程文件：
+dotnet run
+
+kylin arm64适配dotnet：
+
+
+安装dotnet
+wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+运行此脚本之前，需要授予此脚本作为可执行文件运行的权限：
+sudo chmod +x ./dotnet-install.sh
+若要安装最新版本（可能不是 (LTS) 版本），请使用 --version latest 参数，本次安装6.0版本，使用命令：
+./dotnet-install.sh --channel 6.0 --install-dir /home/uxdb/script/uxdb --verbose
+
+编译nuxsql：
+首先拉取npgsql代码，此版本需要与dotnet版本对应，比如：dotnet为6.0版本，npgsql也需要6.0版本：
+git clone https://github.com/npgsql/npgsql.git
+
+rebrand源码npgsql到nuxsql；
+在nuxsql源码目录下执行编译命令：
+dotnet build -c Release Nuxsql.sln -p:FrameworkPathOverride=“dotnet的sdk安装路径”
+
+生成路径：
+src/Npgsql/bin/Release/net7.0/Npgsql.dll
+
+
+
+
+
+
+
+2023-04-23
+4月份工作：
+1、#179300：bit与int类型比较操作支持支持	
+2、#178914：redis_fdw 主线安全、兼容适配，并进行打包验证
+3、#180580：mysql兼容：支持bit类型与bool类型比较操作
+4、#169347：云上贵州 银河麒麟v10 x86打包支持
+5、#175655：2115c项目打包
+6、#176624：ux_cron支持妙计精度移植云上贵州分支并编译测试打包
+7、#180943：保密四期资质:提供平台版本	
+8、#136538：cdps-UXDB静默安装
+9、#136538：odbc测试用例支持验证
+10、#181576：兼容oracle系统视图DBA_JOBS
+11、#181580:兼容oracle左右链接as相同别名指定多次
+12、#181577:支持operator关键字不带as可以作为别名
+13、#181982:银河麒麟 arm适配docker（50%）
+14、#177093：用友项目交流中反馈sysbench测试UXDB性能和mysql差距较大
+15、#129384：qt5.9.8、qt5.6.2部署
+16、#180580：bit操作符编译冲突报错
+17、#183028：北华商舟在linux适配.net
+
+drop table tb3;
+create table tb3(id BIGINT);
+insert into tb3 values(1);
+NUMERIC、DECIMAL、FLOAT、DOUBLE
+SELECT B'1' = CAST(1 AS TINYINT);
+SELECT B'1' = CAST(1 AS SMALLINT);
+SELECT B'1' = CAST(1 AS MEDIUMINT);
+SELECT B'1' = CAST(1 AS INT);
+SELECT B'1' = CAST(1 AS BIGINT);
+SELECT B'1' = CAST(1 AS decimal(5,2));
+SELECT B'1' = CAST(1 AS double);
+SELECT B'1' = CAST(1 AS serial);
+
+varbit更类似mysql bit类型，但比较操作符转换还是需要开发；
+
+
+bit类型调研：
+mysql：
+
+调研内容：
+首先介绍bit类型
+1、bit类型存储方式
+2、使用方法
+
+不同点：
+mysql可以插入整数（有符号），uxdb只能插入01字串
+insert into t1 values(-5);
+当bit位数不一致时，uxdb会进行强转，对右边进行截断、或加0；
+
+还需调研内容：
+pg的类型bit与varbit区别；
+
+
+bit类型等于一个值的时候，不加引号，好改吗 。
+create  table t1(id  bit);
+select * from  t1  where id =1; 
+
+bit类型：
+
+mysql中bit类型一般都是使用整数类型表示，所以支持的bit位数最大只能是64位。而在pg中有专门的bit类型bit(范围1～83886080)，以及可变长度的bit类型varbit。
+ 
+区别一：
+插入值， mysql可以获取到， uxdb不能；
+
+相关问题单：180580、180502
+
+字节定义：
+8个二进制位为一个字节，1024字节为1kb
+
+bit与bool操作符添加
+
+-- -- support 'bit > bool' or 'bool > bit'
+-- CREATE OR REPLACE FUNCTION UX_CATALOG.gtbitbool(BIT, BOOLEAN)
+-- RETURNS BOOLEAN AS 
+-- $$
+-- 	SELECT $1::INTEGER > $2;
+-- $$LANGUAGE SQL PARALLEL SAFE STRICT STABLE;
+
+-- CREATE OR REPLACE FUNCTION UX_CATALOG.gtbitbool(BOOLEAN, BIT)
+-- RETURNS BOOLEAN AS 
+-- $$
+-- 	SELECT $1 > $2::INTEGER;
+-- $$LANGUAGE SQL PARALLEL SAFE STRICT STABLE;
+
+-- CREATE OPERATOR UX_CATALOG.> (PROCEDURE = gtbitbool, LEFTARG = BIT, RIGHTARG = BOOLEAN, COMMUTATOR = <, NEGATOR = <=);
+-- CREATE OPERATOR UX_CATALOG.> (PROCEDURE = gtbitbool, LEFTARG = BOOLEAN, RIGHTARG = BIT, COMMUTATOR = <, NEGATOR = <=);
+
+-- -- support 'bit >= bool' or 'bool >= bit'
+-- CREATE OR REPLACE FUNCTION UX_CATALOG.gtebitbool(BIT, BOOLEAN)
+-- RETURNS BOOLEAN AS 
+-- $$
+-- 	SELECT $1::INTEGER >= $2;
+-- $$LANGUAGE SQL PARALLEL SAFE STRICT STABLE;
+
+-- CREATE OR REPLACE FUNCTION UX_CATALOG.gtebitbool(BOOLEAN, BIT)
+-- RETURNS BOOLEAN AS 
+-- $$
+-- 	SELECT $1 >= $2::INTEGER;
+-- $$LANGUAGE SQL PARALLEL SAFE STRICT STABLE;
+
+-- CREATE OPERATOR UX_CATALOG.>= (PROCEDURE = gtebitbool, LEFTARG = BIT, RIGHTARG = BOOLEAN, COMMUTATOR = <=, NEGATOR = <);
+-- CREATE OPERATOR UX_CATALOG.>= (PROCEDURE = gtebitbool, LEFTARG = BOOLEAN, RIGHTARG = BIT, COMMUTATOR = <=, NEGATOR = <);
+
+-- -- support 'bit < bool' or 'bool < bit'
+-- CREATE OR REPLACE FUNCTION UX_CATALOG.ltbitbool(BIT, BOOLEAN)
+-- RETURNS BOOLEAN AS 
+-- $$
+-- 	SELECT $1::INTEGER < $2;
+-- $$LANGUAGE SQL PARALLEL SAFE STRICT STABLE;
+
+-- CREATE OR REPLACE FUNCTION UX_CATALOG.ltbitbool(BOOLEAN, BIT)
+-- RETURNS BOOLEAN AS 
+-- $$
+-- 	SELECT $1 < $2::INTEGER;
+-- $$LANGUAGE SQL PARALLEL SAFE STRICT STABLE;
+
+-- CREATE OPERATOR UX_CATALOG.< (PROCEDURE = ltbitbool, LEFTARG = BIT, RIGHTARG = BOOLEAN, COMMUTATOR = >, NEGATOR = >=);
+-- CREATE OPERATOR UX_CATALOG.< (PROCEDURE = ltbitbool, LEFTARG = BOOLEAN, RIGHTARG = BIT, COMMUTATOR = >, NEGATOR = >=);
+
+-- -- support 'bit <= bool' or 'bool <= bit'
+-- CREATE OR REPLACE FUNCTION UX_CATALOG.ltebitbool(BIT, BOOLEAN)
+-- RETURNS BOOLEAN AS 
+-- $$
+-- 	SELECT $1::INTEGER <= $2;
+-- $$LANGUAGE SQL PARALLEL SAFE STRICT STABLE;
+
+-- CREATE OR REPLACE FUNCTION UX_CATALOG.ltebitbool(BOOLEAN, BIT)
+-- RETURNS BOOLEAN AS 
+-- $$
+-- 	SELECT $1 <= $2::INTEGER;
+-- $$LANGUAGE SQL PARALLEL SAFE STRICT STABLE;
+
+-- CREATE OPERATOR UX_CATALOG.<= (PROCEDURE = ltebitbool, LEFTARG = BIT, RIGHTARG = BOOLEAN, COMMUTATOR = >=, NEGATOR = >);
+-- CREATE OPERATOR UX_CATALOG.<= (PROCEDURE = ltebitbool, LEFTARG = BOOLEAN, RIGHTARG = BIT, COMMUTATOR = >=, NEGATOR = >);
+
+-- -- support 'bit = bool' or 'bool = bit'
+-- CREATE OR REPLACE FUNCTION UX_CATALOG.eqbitbool(BIT, BOOLEAN)
+-- RETURNS BOOLEAN AS 
+-- $$
+-- 	SELECT $1::INTEGER = $2;
+-- $$LANGUAGE SQL PARALLEL SAFE STRICT STABLE;
+
+-- CREATE OR REPLACE FUNCTION UX_CATALOG.eqbitbool(BOOLEAN, BIT)
+-- RETURNS BOOLEAN AS 
+-- $$
+-- 	SELECT $1 = $2::INTEGER;
+-- $$LANGUAGE SQL PARALLEL SAFE STRICT STABLE;
+
+-- CREATE OPERATOR UX_CATALOG.= (PROCEDURE = eqbitbool, LEFTARG = BIT, RIGHTARG = BOOLEAN, COMMUTATOR = =, NEGATOR = <>, HASHES, MERGES);
+-- CREATE OPERATOR UX_CATALOG.= (PROCEDURE = eqbitbool, LEFTARG = BOOLEAN, RIGHTARG = BIT, COMMUTATOR = =, NEGATOR = <>, HASHES, MERGES);
+
+-- -- support 'bit != bool' or 'bool != bit'
+-- CREATE OR REPLACE FUNCTION UX_CATALOG.neqbitbool(BIT, BOOLEAN)
+-- RETURNS BOOLEAN AS 
+-- $$
+-- 	SELECT $1::INTEGER != $2;
+-- $$LANGUAGE SQL PARALLEL SAFE STRICT STABLE;
+
+-- CREATE OR REPLACE FUNCTION UX_CATALOG.neqbitbool(BOOLEAN, BIT)
+-- RETURNS BOOLEAN AS 
+-- $$
+-- 	SELECT $1 != $2::INTEGER;
+-- $$LANGUAGE SQL PARALLEL SAFE STRICT STABLE;
+
+-- CREATE OPERATOR UX_CATALOG.<> (PROCEDURE = neqbitbool, LEFTARG = BIT, RIGHTARG = BOOLEAN, COMMUTATOR = <>, NEGATOR = =);
+-- CREATE OPERATOR UX_CATALOG.<> (PROCEDURE = neqbitbool, LEFTARG = BOOLEAN, RIGHTARG = BIT, COMMUTATOR = <>, NEGATOR = =);
+
+
+2023-05-05
+Enable/Disable/Validate/Novalidate:
+http://t.csdn.cn/l9ndZ
+Enable/Disable:对未来插入数据进行校验；
+Validate/Novalidate：对已有数据进行校验；
+
+
+create table t3 (like tu INCLUDING INDEXES);
+create table t2 (like t INCLUDING all);
+create table tc4 (like tc2 INCLUDING CONSTRAINTS);
+
+create table tb(id int unique);
+ALTER TABLE tb disABLE validate CONSTRAINT TB_ID_KEY;
+create table tt(like tb including all);
+
+1、系统表相关
+ux_constraint 表的CONINDID（conindid）字段对应ux_index的INDEXRELID(indexrelid)字段值
+if ((parent_con->conindid == idxRel->rd_index->indexrelid)
+
+判断是否唯一字段，
+通过ux_index的 indisunique 字段判断；
+
+
+create table tb(id int unique, name text);
+create index index_id on tb(id);
+create index index_1 on tb(name);
+
+源码：
+DefineRelation
+
+like including语法调用栈：
+transformIndexConstraints
+
+
+
+发现问题：
+1、alter disable未实现tab功能；
+2、create table ..(like .. including ..); 		//同一个字段只能创建一个索引，且存在优先级；
+
+
+2023-05-11
+问题单：
+176708
+
+报错文件：
+compatible_testcase/results/window.out
+
+报错sql：
+SELECT i,COUNT(*) OVER (ORDER BY i ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
+   FROM (VALUES(1,1),(2,2),(3,NULL),(4,NULL)) t(i,v);
+
+
+
++{ aggfnoid => 'count(any)', aggtransfn => 'numeric_inc_any',
++  aggcombinefn => 'numeric_add', aggmtransfn => 'numeric_inc_any',
++  aggminvtransfn => 'numeric_dec_any', aggtranstype => 'numeric',
++  aggmtranstype => 'numeric', agginitval => '0', aggminitval => '0' },
++{ aggfnoid => 'count()', aggtransfn => 'numeric_inc', aggcombinefn => 'numeric_add',
++  aggmtransfn => 'numeric_inc', aggminvtransfn => 'numeric_dec', aggtranstype => 'numeric',
++  aggmtranstype => 'numeric', agginitval => '0', aggminitval => '0' },
+
+
+2023-05-16
+设置number类型显示宽度：
+set numwidth 15;
+
+number类型数据字段插入double类型数据
+CREATE TABLE my_table (
+  numeric_column NUMBER primary key
+);
+insert INTO my_table values(CAST(6.000000000263789E15 as BINARY_DOUBLE));
+
+2023-05-17
+
+pg15升级：
+代码分支：
+feature/V2.1.1.5D/#176814
+
+
+
+2023-05-18
+
+问题单：#185134
+
+增加审计日志外发接口
+
+DM审计外部接口：
+支持接口采用标准外发日志，达梦是使用windows nc -lvp 端口号 命令 可以接收到审计内容 
+
+dm机器：
+ssh 192.71.0.186
+
+获取dm数据库信息linux命令：
+ps -ef | grep dmserver			//查看dm数据库配置文件路径
+
+dm命令：
+select * from v$version;		//查看dm数据库版本信息
+SELECT CURRENT_USER;			//显示当前用户
+SELECT * FROM V$DM_INI WHERE PARA_NAME='ENABLE_AUDIT';		//查询ENABLE_AUDIT 的当前值（或者select * from V$PARAMETER where NAME='ENABLE_AUDIT';）
+select sf_get_para_value(1,'ENABLE_AUDIT');					//查看ENABLE_AUDIT的值，审计开关通过参数ENABLE_AUDIT控制
+
+
+
+
+nc使用：
+服务端：
+nc64.exe -l -p 1234			//-l 打开监听，-p指定本地与远端通讯端口
+
+客户端（发送端）：
+nc -nv 192.71.0.181 1234	//nc -nv +ip + 服务端端口，-v相信信息
+
+
+
+SELECT * FROM ux_get_replication_slots();			//获取复制槽信息
+SELECT * FROM ux_drop_replication_slot('mu_slot1');	//删除复制槽
+SELECT * FROM ux_create_logical_replication_slot('my_subscription', 'uxoutput');		//创建复制槽
+select * from ux_copy_logical_replication_slot('my_subscription','my_slot');			//复制复制槽
+
+
+
+
+create user u1 password '1';
+create schema u1;
+grant USAGE on SCHEMA u1 to u1;
+grant ALL ON SCHEMA u1 TO u1;
+
+\c uxdb u1 ;
+CREATE TABLE u1.sensitive_data (
+  id SERIAL PRIMARY KEY,
+  username TEXT,
+  password TEXT
+);
+
+\c - uxdb ;
+create extension cve_2020_14350 schema u1;
+
+
+
+2023-05-23
+
+CVE-2022-2625:
+扩展脚本替换不属于扩展的对象
+某些扩展使用 或命令。有些不遵守记录的规则，仅针对已知已是扩展成员的对象。攻击需要具有在至少一个架构中创建非临时对象的权限，能够引诱或等待管理员在该架构中创建或更新受影响的扩展，以及能够引诱或等待受害者使用 或 中的目标对象。给定所有三个先决条件，攻击者可以作为受害者角色（可能是超级用户）运行任意代码。已知受影响的扩展包括 PostgreSQL 捆绑扩展和非捆绑扩展。PostgreSQL在核心服务器中阻止了这种攻击，因此无需修改单个扩展。CREATE OR REPLACE CREATE IF NOT EXISTS 
+
+ 修复CREATE OR REPLACE & CREATE IF NOT EXISTS时，存在一个不属于该扩展的现有对象，覆盖该对象并将其纳入该扩展
+
+排序、外部表、物化视图、模式、序列、服务、表
+
+2023-05-26
+
+ENABLE VALIDATE				//约束生效
+ENABLE NOT VALIDATE			//不验证已经存储的数据（check有效），主键与唯一索引等效于ENABLE VALIDATE
+DISABLE VALIDATE			//禁止修改数据
+DISABLE NOT VALIDATE		//约束禁用
+
+
+
+2023-05-29
+
+
+kylin v10+loongarch
+
+2023-05-30
+
+CopyFrom
+	NextCopyFrom
+		NextCopyFromRawFields
+			CopyReadLine
+				CopyReadLineText
+					CopyLoadRawBuf
+						CopyGetData
+
+dpkg编译安装：
+https://blog.csdn.net/abcdu1/article/details/121105870
+
+2023-06-02
+
+需求：可以针对同一个对象创建多个同义词
+
+用户		表		同义词
+UserA
+SCOTT 		TAB 
+
+在 UserA 用户下，为 SCOTT.TAB 创建私有同义词 MyTab
+
+
+
+
+RemoveSynonymById			//删除ux_synonym系统表数据
+SynonymDrop					//删除同义词依赖表关系
+
+
+
+GetNewRelFileNode			//ux_class生成relfilenode
+
+2023-06-06
+
+
+dbms_application_info、dbms_crypto、dbms_obfuscation_toolkit、dbms_profiler、dbms_pipe、dbms_alert、dbms_debug、utl_smtp、utl_http、utl_url、dbms_xmldom、dbms_xmlparser
+
+
+已经调研的包：
+dbms_alert				//已实现
+dbms_pipe				//116830、94802 已实现函数（create_pipe、pack_message、send_message、db_pipes、receive_message、next_item_type、unpack_message_text、next_item_type）
+
+dbms_xmlparser			//pg内部有部分函数支持，可能语法和行为与Oracle的DBMS_XMLPARSER包有所不同，需要调整代码和查询；预估1人/天
+dbms_application_info	// SET_MODULE有实现，见问题单151650、136373
+dbms_crypto				//180682 		ORACLE12C文档中，DBMS_OBFUSCATION_TOOLKIT已经被DBMS_CRYPTO代替，uxcrypto插件部分有实现
+dbms_obfuscation_toolkit	//180682
+
+dbms_debug				//180682 有调研未实现,Oracle 数据库 19c开始，DBMS_DEBUG 
+包已被弃用，被替换为DBMS_DEBUG_JDWP，pg中通过pldebugger插件可以调试PL/SQL，可通过包装pldebugger插件进行兼容；
+
+
+
+未调研的包：
+dbms_profiler			//该软件包提供了一个接口来分析现有的PL/SQL应用程序并识别性能瓶颈。然后，您可以收集并持久存储 PL/SQL 探查器数据，
+需实现3个表PLSQL_PROFILER_RUNS、PLSQL_PROFILER_UNITS、PLSQL_PROFILER_DATA；常用函数START_PROFILER、STOP_PROFILER（启动停止会话数据收集），可参考扩展pg_stat_statements，但pg插件pg_stat_statements与PLSQL_PROFILER_DATA表字段对应较多，其他两个表得调研分析，START_PROFILER、STOP_PROFILER函数需要调研分析；预估 2-3人/天
+
+
+
+utl_smtp				//可以尝试使用 plpythonu 插件调用 Python 的 smtplib 发送电子邮件	预估 2天
+
+utl_http				//可以尝试使用 PL/Python 中的 http.client 模块发送 HTTP 请求		预估 2天
+utl_url					//可以使用pgcrypto扩展实现url编码解码功能							预估 2天
+dbms_xmldom				//子函数较多，部分实现即可，可以尝试使用plpython3u插件进行适配		预估 2天
+
+
+dbms_xmlparser：
+
+NEWPARSER
+
+
+186397:二十八所core问题：
+
+复现语句：
+【前置条件】清空环境:
+create extension if not exists plsql ;
+set default_pl_language =plsql;
+drop schema if exists DBSJGX_BJXF cascade;
+drop package if exists "ZZBZ_ZBZJXN_LD$RP" cascade;
+-【步骤1】创建包及包体:
+create schema DBSJGX_BJXF;
+--specialsql
+CREATE OR REPLACE PACKAGE DBSJGX_BJXF."ZZBZ_ZBZJXN_LD$RP" as
+column_changed$$ RAW(1000);
+procedure rep_delete(
+"BZL_O" IN VARCHAR2,
+"DHZDZYJL2_o" IN NUMBER,
+"DHZXZYJL3_o" IN NUMBER,
+"DHZYZDYJ4_o" IN NUMBER,
+"DKZDZYJL5_o" IN NUMBER,
+"DKZXZYJL6_o" IN NUMBER,
+"DMBGJS7_o" IN NUMBER,
+"DMBGZS8_o" IN NUMBER,
+"DW9_o" IN VARCHAR2,
+"EQMGTCJL10_O" IN NUMBER,
+"FWFBL11_O" IN NUMBER,
+"FXMBGL12_O" IN NUMBER,
+"FZGL13_O" IN NUMBER,
+"GZFS14_O" IN VARCHAR2,
+"JLFBL15_O" IN NUMBER,
+"JLTCJD16_O" IN NUMBER,
+"LDPTLX17_O" IN NUMBER,
+"LQFS18_O" IN VARCHAR2,
+"MBRL19_O" IN NUMBER,
+"MQBJ20_O" IN NUMBER,
+"SJDHZDZYJL21_O" IN NUMBER,
+"SJDHZDZYJL22_O" IN NUMBER,
+"SJDHZYZDYJ23_O" IN NUMBER,
+"SJDKZDZYJL24_O" IN NUMBER,
+"SJDKZXZYJL25_O" IN NUMBER,
+"SJDMBGJS26_O" IN NUMBER,
+"SJDMBGZS27_O" IN NUMBER,
+"SJEQMGTCJL28_O" IN NUMBER,
+"SJFWFBL29_O" IN NUMBER,
+"SJFXMBGL30_O" IN NUMBER,
+"SJFZGL31_O" IN NUMBER,
+"SJGZFS32_O" IN VARCHAR2,
+"SJJLFBL33_O" IN NUMBER,
+"SJJLTCJD34_O" IN NUMBER,
+"SJLDPTLX35_O" IN VARCHAR2,
+"SJLQFS36_O" IN VARCHAR2,
+"SJMBRL37_O" IN NUMBER,
+"SJMQBJ38_O" IN NUMBER,
+"SJSJ39_O" IN NUMBER,
+"SJSJSJ40_O" IN NUMBER,
+"SJSS41_O" IN NUMBER,
+"SJWQMGTCJL42_O" IN NUMBER,
+"SJWYWMGTCJL43_O" IN NUMBER,
+"SJX44_O" IN NUMBER,
+"SJYFWJ45_O" IN NUMBER,
+"SJYWMGTCJL46_O" IN NUMBER,
+"SJZFWJ47_O" IN NUMBER,
+"DKZXZYJL101" IN NUMBER,
+"DKZXZYJL111" IN NUMBER,
+"DKZXZYJL121" IN NUMBER,
+"DKZXZYJL131" IN NUMBER,
+"DKZXZYJL141" IN NUMBER,
+"DKZXZYJL151" IN NUMBER,
+"DKZXZYJL161" IN NUMBER,
+"DKZXZYJL171" IN NUMBER,
+"DKZXZYJL181" IN NUMBER,
+"DKZXZYJL191" IN NUMBER,
+"DKZXZYJL201" IN NUMBER,
+"DKZXZYJL211" IN NUMBER,
+"DKZXZYJL221" IN NUMBER,
+"DKZXZYJL231" IN NUMBER,
+"DKZXZYJL241" IN NUMBER,
+"DKZXZYJL251" IN NUMBER,
+"DKZXZYJL261" IN NUMBER,
+"DKZXZYJL271" IN NUMBER,
+"DKZXZYJL281" IN NUMBER,
+"DKZXZYJL291" IN NUMBER,
+"DKZXZYJL301" IN NUMBER,
+"DKZXZYJL311" IN NUMBER,
+"DKZXZYJL321" IN NUMBER,
+"DKZXZYJL331" IN NUMBER,
+"DKZXZYJL341" IN NUMBER,
+"DKZXZYJL351" IN NUMBER,
+"DKZXZYJL361" IN NUMBER,
+"DKZXZYJL371" IN NUMBER,
+"DKZXZYJL381" IN NUMBER,
+"DKZXZYJL391" IN NUMBER,
+"DKZXZYJL401" IN NUMBER,
+"DKZXZYJL411" IN NUMBER,
+"DKZXZYJL421" IN NUMBER,
+"DKZXZYJL431" IN NUMBER,
+"DKZXZYJL441" IN NUMBER,
+"DKZXZYJL451" IN NUMBER,
+"DKZXZYJL461" IN NUMBER,
+"DKZXZYJL471" IN NUMBER,
+"DKZXZYJL481" IN NUMBER,
+"DKZXZYJL491" IN NUMBER,
+"DKZXZYJL501" IN NUMBER,
+"DKZXZYJL511" IN NUMBER,
+"DKZXZYJL521" IN NUMBER,
+"DKZXZYJL531" IN NUMBER,
+"DKZXZYJL541" IN NUMBER,
+"DKZXZYJL551" IN NUMBER,
+"DKZXZYJL561" IN NUMBER,
+"DKZXZYJL591" IN NUMBER,
+"DKZXZYJL571" IN NUMBER,
+"DKZXZYJL601" IN NUMBER,
+"DKZXZYJL611" IN NUMBER,
+"DKZXZYJL1481" IN NUMBER,
+"DKZXZYJL1491" IN NUMBER,
+"DKZXZYJL1501" IN NUMBER,
+"DKZXZYJL1511" IN NUMBER,
+"DKZXZYJL1521" IN NUMBER,
+"DKZXZYJL1531" IN NUMBER,
+"DKZXZYJL1541" IN NUMBER,
+"DKZXZYJL1551" IN NUMBER,
+"DKZXZYJL1561" IN NUMBER,
+"DKZXZYJL1591" IN NUMBER,
+"DKZXZYJL1571" IN NUMBER,
+"DKZXZYJL1601" IN NUMBER,
+"DKZXZYJL1611" IN NUMBER,
+"DKZXZYaaaJL611" IN NUMBER,
+"DKZXZYaaaJLm611" IN NUMBER,
+"DKZXZYaaahhJLm611" IN NUMBER,
+"DKZXZYaaahhJdLm6111" IN NUMBER,
+"DKZzXfZYaaahhJdLmd611" IN NUMBER,
+"DKZzXfZYkmd611" IN NUMBER,
+propagation_flag IN CHAR);
+
+procedure rep_insert(
+"BZL_n" IN VARCHAR2,
+"DHZDZYJL2_o" IN NUMBER,
+propagation_flag IN CHAR);
+END "ZZBZ_ZBZJXN_LD$RP";
+/
+--specialsql
+
+2023-06-08
+
+utl_smtp包实现：
+
+使用 PL/Python 和 smtplib 库来实现类似功能的示例代码:
+
+CREATE OR REPLACE FUNCTION UTL_SMTP.OPEN_CONNECTION(
+  host text,
+  port integer
+) RETURNS integer AS $$
+import smtplib
+
+def utl_smtp_open_connection(host, port):
+    smtp = smtplib.SMTP(host, port)
+    return id(smtp)
+
+return utl_smtp_open_connection(host, port)
+$$ LANGUAGE plpython3u;
+
+CREATE OR REPLACE FUNCTION UTL_SMTP.CLOSE_CONNECTION(
+  c integer
+) RETURNS void AS $$
+BEGIN
+  PERFORM ux_terminate_backend(c);
+END;
+$$ LANGUAGE pluxsql;
+
+
+-- newParser需要实现无参数语法，uxdb需要修改语法实现
+CREATE SCHEMA DBMS_XMLPARSER;
+CREATE OR REPLACE FUNCTION DBMS_XMLPARSER.newParser() RETURNS TEXT AS $$
+DECLARE
+  parser TEXT;
+BEGIN
+  -- 初始化一个XML解析器对象
+--   parser := XMLPARSE(DOCUMENT '<?xml version="1.0" encoding="UTF-8"?><root><element>Value</element></root>');
+
+--   -- 返回解析器对象
+     RETURN parser;
+END;
+$$ LANGUAGE pluxsql;
+
+CREATE OR REPLACE FUNCTION DBMS_XMLPARSER.freeParser(parser TEXT) RETURNS VOID AS $$
+BEGIN
+  -- 释放解析器对象
+  -- 在PL/uxSQL中，由于垃圾回收的存在，您不需要显式释放解析器对象，它将在函数结束时自动释放。
+  -- 因此，这个函数实际上是一个空函数，只是为了与Oracle的DBMS_XMLPARSER.freeParser函数保持一致性。
+  -- 如果您需要手动释放资源，请根据您的具体需求执行其他操作。
+  RETURN;
+END;
+$$ LANGUAGE pluxsql;
+
+2023-06-09
+
+uuid与guid区别：
+
+
+UUID（通用唯一标识符）和 GUID（全局唯一标识符）是用于唯一标识对象的标准化格式。它们在概念上非常相似，但在实际实现上可能存在一些细微差异。
+
+格式：
+UUID：UUID 是基于标准化格式的字符串，通常由 32 个十六进制数字组成，以连字符分隔为五个部分。例如，123e4567-e89b-12d3-a456-426655440000。
+GUID：GUID 也是一个唯一标识符，但它通常以原始二进制格式表示，通常为 128 位（16 字节）。在特定的上下文中，可以将 GUID 转换为字符串表示。
+
+生成方法：
+UUID：UUID 是根据标准定义的算法生成的。其中最常见的是版本 4（基于随机数生成）和版本 5（基于命名空间和名称生成）。
+GUID：GUID 的生成方法依赖于具体的实现和平台。在大多数情况下，GUID 使用 MAC 地址、时间戳和随机数等组合生成。
+
+全局唯一性：
+UUID：UUID 的目标是在全球范围内保持唯一性。虽然不是绝对保证，但由于算法的随机性和复杂性，生成重复的可能性极低。
+GUID：GUID 的目标也是在全球范围内保持唯一性。实际上，GUID 的唯一性由于其生成方法和实现可能存在差异，有时可能会受到一些限制。
+总之，UUID 是一种标准化的格式，通常以字符串形式表示，而 GUID 是唯一标识符的概念，可以具有不同的实现方式，包括原始二进制和字符串表示。在实际使用中，根据具体的应用需求和平台支持，可以选择使用 UUID 或 GUID。
+
+
+
+/* BEGIN:Added by qiwang for #184669, 2023/6/9 */
+CREATE OR REPLACE FUNCTION UX_CATALOG.sys_guid() RETURNS text AS $$
+DECLARE
+  guid text;
+BEGIN
+  SELECT translate(mysql_uuid()::text, '-', '') INTO guid;
+  RETURN guid;
+END;
+$$ LANGUAGE PLUXSQL PARALLEL SAFE;
+/* END:Added by qiwang for #184669, 2023/6/9 */
+
+
+CREATE OR REPLACE FUNCTION sys_guid() RETURNS text AS $$
+DECLARE
+  guid text;
+BEGIN
+  SELECT regexp_replace(mysql_uuid()::text, '-', '', 'g') INTO guid;
+  RETURN guid;
+END;
+$$ LANGUAGE PLUXSQL;
+
+CREATE OR REPLACE FUNCTION UX_CATALOG.sys_guid() RETURNS text AS $$
+DECLARE
+  guid text;
+BEGIN
+  SELECT REPLACE(mysql_uuid()::text, '-', '') INTO guid;
+  RETURN guid;
+END;
+$$ LANGUAGE PLUXSQL PARALLEL SAFE;
+
+
+2023-06-13
+
+打包脚本
+su - uxdb -c "/opt/uxsinodb-2.1/dbsql/bin/ux_ctl -D /opt/uxsinodb-2.1/simo_dev stop"
+
+重载service服务：
+sudo systemctl daemon-reload
+
+指定用户执行脚本
+sudo -u uxdb sh /opt/uxsinodb-2.1/bin/configure.sh start
+
+init.d启用禁用服务：
+sudo update-rc.d uxinodb defaults
+sudo update-rc.d uxinodb remove
+控制服务的启动、停止和重启：
+sudo service uxinodb start
+sudo service uxinodb stop
+sudo service uxinodb restart
+
+1、修改Systemd服务管理器路径
+/lib/systemd/system为链接目录，真实路径为/usr/lib/systemd/system
+2、rpm、deb自启动脚本configure.sh修改
+增加指定用户名启动数据库（通过UXUSER设置）、增加restart、reload功能、增加文件/opt/uxsinodb-2.1/autoloadconfig
+可设置集簇路径等参数
+3、deb包数据库安装路径修改dbsql
+4、rpm打包与编译脚本build.sh参数保持一致
+
+ip：
+192.71.1.10-192.71.1.14
 
