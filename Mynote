@@ -9,6 +9,9 @@
 结束时间：2023-05-31
 描述：分析依赖关系调用
 
+项目号：
+JA0101661769202320100
+
 
 报销流程：李悦
 发票报销：王淼
@@ -148,6 +151,20 @@ trust：表示无需密码
 /********************************************work*******************************************/
 
 1、svn://192.29.1.2/svn/uxdb/11.开发/05.计划/2020/ver2.1.0.3/ver2.1.0.3 db自测基本用例.xls 组内自测
+
+
+
+uxdb工作事务：
+redmine:
+http://cd.uxsino.com:19503/my/page
+用户名/密码：wang_qi/1413014046.wq
+uxdb绩效：
+http://cd.uxsino.com:2090/#/login
+用户名/密码：wang_qi/12082499
+
+postgres手册：
+http://postgres.cn/docs/12/ecpg-develop.html
+
 
 
 数据库机器：
@@ -303,6 +320,7 @@ https://github.com/npgsql/npgsql/tree/main/src
 密码：
 vpn：
 
+北京vpn：
 VPN 
 账号 tianjinyang
         密码 tianjinyang@123
@@ -311,6 +329,10 @@ gaomingsheng@123
 
 工时登记：
 密码：12345678
+
+西安vpn：
+密码：
+wangqi!@#
 
 云：
 用户名：wangqi
@@ -440,7 +462,7 @@ http://cd.uxsino.com:19503/projects/dev_uxdb/wiki/%E6%B5%81%E7%A8%8B%E8%A7%84%E8
 postgre资料：
 
 1、uxdb文档
-http://192.30.1.2/uxdb.html			//版本说明
+http://192.30.3.136:3000/		//版本说明
 
 
 2、pg查找资料
@@ -946,6 +968,17 @@ sudo service uxinodb start
 sudo service uxinodb stop
 sudo service uxinodb restart
 
+23、查看符号定义：
+
+nm -C <dynamic_library>
+objdump -T <dynamic_library>
+readelf -s <dynamic_library>
+
+24、windows查看文件MD5命令：
+
+certutil -hashfile C:\Path\To\Your\File.txt MD5
+
+
 
 
 
@@ -1213,6 +1246,10 @@ END;
 $$;
 
 注意点：没返回值的函数，在语句块中，通过PERFORM调用，否则会报错；
+
+
+ux_typeof函数		//用于查看函数返回类型
+eg：ux_typeof(min(V6))		//查看min函数，参数字段是V6时，返回函数类型；
 
 
 
@@ -1927,6 +1964,17 @@ LANG="$LANG"
 4、显示系统语言
 locale
 
+uxdb问题记录：
+1）license问题：
+带license如果未执行下面命令，生成的license客户端执行命令会提示降级
+getcap uxdb 
+setcap cap_setuid+ep uxdb
+
+发现问题现象：
+安装run包时，初始化db之前执行了ctrl+c中断安装；
+问题原因：
+安装run包时，中间不要ctrl+c安装中断，正常安装直到初始化完成。原因是之前版本涉及uxdb的权限是在初始化db的时候赋予的
+
 
 
 2020-1-21
@@ -2308,6 +2356,21 @@ rpm安装：
 rpm -ivh --force uxsinodb-2.3-1.nfs.x86_64.rpm
 
 打包注意点：
+1、打simple包：
+编译去掉参数--with-openssl --with-libxml --with-uuid=ossp
+configure加参数--without-readline
+
+2、28s使用kylin V4+x86机器，该机器特殊点在于glibc版本问题：
+glibc版本是2.23；
+
+3、run包安装提示报错：chmod: cannot access ‘/tmp/uxdb_install_tmp/jre/bin/*’: No such file or directory
+
+打包需要将jre打入，/home/uxdb/db-package/others/jre  在这个路径下放一个可用的jre，
+安装完后是这个样子：/home/uxdb/db-package/others/jre/bin/java
+
+jre的包见路径：D:\mywork\mywork_2023\南京28所\添加jre
+
+
 1、如果有uuid
 拷贝/lib64/libossp-uuid.so.16 到安装目录下；
 一、rpm打包：
@@ -2352,9 +2415,27 @@ mvn -Dpljava.libjvmdefault=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.342.b07-0.p01.k
 uos系统编译，以下参数有问题
 --with-pam --with-gssapi  --with-systemd
 
+
+
 编译报错处理：
 1、对于-Werror报错，相关问题单：
 184625 
+
+编译问题：
+
+
+1、maven编译问题
+提示jar找不到：
+原因：maven源配置问题
+解决方法：
+1、修改配置文件：/etc/maven/settings.xml，添加maven阿里源
+<mirror>
+    <id>aliyunmaven</id>
+    <mirrorOf>*</mirrorOf>
+    <name>阿里云公共仓库</name>
+    <url>https://maven.aliyun.com/repository/public</url>
+</mirror>
+2、安装jdk，安装可能是jde，需要确定jdk是否安装成功，通过javac命令确定；
 
 
 
@@ -2453,7 +2534,7 @@ UOS/申威：
 
 麒麟V10+arm		192.30.0.54			uxdb/Uxsino@1234
 
-Kylinv4 + arm 192.30.0.50
+Kylinv4 + arm 192.30.0.50			密码：123456
 
 Kylinv4 + x86： 
 10.1.106.92   uxdb/Uxsino@123           银河麒麟V4_x86+海光x64
@@ -3421,6 +3502,15 @@ alter system set nls_date_format= 'yyyy-mm-dd hh24:mi:ss' scope=spfile;
 
 四、oracle下常用的系统表和系统视图
 https://blog.51cto.com/jim123/1947872
+
+五、28s现场问题
+
+proc手册：
+1、类型长度介绍：在第4章节
+
+
+ROWID
+
 
 
 
@@ -9419,6 +9509,9 @@ static struct config_string ConfigureNamesString[] =
 		NULL, NULL, NULL
 	},
 
+显示时分秒：
+ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS';
+
 
 
 
@@ -9468,11 +9561,14 @@ parse_analyze
 编译命令：
  ./build.sh --release=standard --version=2.1.1.4 --license=internal --enable-root --nouxfs
 
-sudo yum -y install gcc flex bison readline readline-devel zlib zlib-devel   openssl openssl-devel libxml2 libxml2-devel libxslt libxslt-devel gettext libssl libssl-devel libssh linssh-devel    perl-ExtUtils-Embed
+sudo yum -y install gcc flex bison readline readline-devel zlib zlib-devel   openssl openssl-devel libxml2 libxml2-devel libxslt libxslt-devel gettext libssl libssl-devel libssh linssh-devel    perl-ExtUtils-Embed ossp-uuid-dev libcurl lz4 zstd
 yum install -y ant fuse fuse-devel boost-devel
 
 yum install -y libtool*
 yum -y install automake
+sudo yum install libselinux-devel maven
+
+
 
 
 
@@ -10173,7 +10269,7 @@ Npgsql：
 <entry key="dialect" value="NHibernate.Dialect.PostgreSQLDialect" />
 
 
-MVC+NHibernate+Spring+ .NET适配：
+1、MVC+NHibernate+Spring+ .NET适配：
 
 目前需要写一个nhibernate + spring mvc的demo，
 框架这边我已经搭好了，但是进行适配时，
@@ -10190,6 +10286,10 @@ Data Source=${db.datasource};Database=${db.database};User Id=${db.user};Password
 connectionString="Host=${db.datasource};Database=${db.database};Username=${db.user};Password=${db.password}"
 
    <db:provider id="DbProvider" provider="Npgsql-2.0" connectionString="Host=192.71.0.137;Database=uxdb;Username=uxdb;Password=123456" />
+
+2、Mono.Security.dll
+
+npgsql3x版本之后再没有Mono.Security.dll这个库
 
 
 2022-04-22
@@ -10337,12 +10437,110 @@ uxdb-std-kylin10-arm64-v2.1.1.4.014.p2-c928f322f09bf8476202dd92596b3536.md
 1、首先查看系统是否兼容
 2、如果不兼容的话，寻找解决方案，查看是否修改代码
 
+windows编译c文件
+使用命令：
+CL.exe proc.c /I"D:\uxdbinstall_1\include" /link /LIBPATH:"D:\uxdbinstall_1\lib" mylib.lib
+
 windows编译postgres
 
 1、进入src\tools\msvc路径，执行build.bat
 2、编译后跑回归测试，perl vcregress.pl check
 
+MSBuild.exe uxsql.sln /p:Configuration=Debug /p:Platform="Win32"
+
+windows win32编译过程：
+1、需要先编译uxfs
+1）uxdb-ng\uxdb-2.1\src\tools\msvc\config_default.pl文件需要修改 nouxfs => 1
+2）uxdb-ng\uxfs-1.0\nouxfs 编译libxtreemfs4c.lib库
+修改build_nouxfs.bat脚本，
+cmake ../ -G "Visual Studio 16 2019" -A "x64"
+devenv /rebuild "Release|x64" nouxfs.sln
+
+上面x64位win64编译，win32编译将x64改为win32，最终生成libxtreemfs4c.lib库；
+
+
+2、编译uxdb
+
+1）修改文件
+修改文件 uxdb-ng\uxdb-2.1\src\include\ux_config.h.win32	
+#define CONFIG_LICENSE_TYPE INTERNAL_LICENSE_TYPE		//表示不带license
+
+2）进入msvc执行build编译
+执行脚本：D:\workspace\uxdb-ng\uxdb-2.1\src\tools\msvc\build.bat
+之后在
+uxdb-ng/uxdb-2.1 目录下执行：
 MSBuild.exe uxsql.sln /p:Configuration=Release /p:Platform="Win32"
+
+
+3、win32的相关库路径
+D:\mywork\mywork_2023\南京28所\Win32
+
+4、wins查看动态库的信息，可以看到动态库是多少位的
+dumpbin /HEADERS D:\uxdbinstall\dbsql\bin\zlib1.dll
+
+5、uxdb报错：uxcrypto.vcxproj工程提示报错：
+
+openssl.obj:error LNK2019:无法解析的外部符号 _OpenSSL_add_all_algorithms
+
+修改方法：
+contrib/uxcrypto/openssl.c
+# if OPENSSL_API_COMPAT < 0x10100000L
+_OpenSSL_add_all_algorithms();
+#endif
+
+
+
+
+linux编译问题：
+1、configure报错，查看config.log文件确定问题；
+2、如果是缺少库的问题，直接安装库文件
+3、如果是未定义问题，查看对应库中是否定义函数名
+通过nm -C 查看静态库符号：
+nm -C /home/uxdb/uxdb-ng/uxdb-2.1/../thirdparty/stalib_install/xml2_install/lib/libxml2.a |grep fcntl
+通过objdump -T查看动态库符号：
+objdump -T /lib64/libc-2.17.so |grep fcntl
+
+可能问题是版本不匹配，换取与系统版本匹配的源；
+
+
+
+
+
+
+windows编译问题：
+
+1、编译win32提示报错： D:\workspace\uxdb-ng\uxdb-2.1\uxsql.sln.metaproj : error MSB4126: 指定的解决方案配置“Release|x86”无效。请使用 Configuration 和 Platform 属性指定有效的 解决方案配置(例如 MSBuild.exe
+解决方法：
+uxdb-ng/uxdb-2.1 目录下执行：
+MSBuild.exe uxsql.sln /p:Configuration=Release /p:Platform="Win32"
+
+2、编译文件修改
+
+软件安装目录：C:\Software
+编译依赖文件所在目录：D:\uxdb_external
+代码目录：D:\workspace\uxdb-ng
+
+使用说明：
+1）、进入 D:\workspace 目录，命令行执行 Env.bat 脚本准备编译环境；
+
+2）、进入 uxdb-ng\uxfs-1.0\nouxfs(第4步中config_default.pl文件需要修改 nouxfs => 1) 编译nouxfs库；
+
+3）、按需修改 uxdb-ng\uxdb-2.1\src\include\ux_config.h.win32（版本、license类型）,
+   uxdb-ng\uxdb-2.1\src\tools\msvc\config_default.pl（编译依赖） 等文件；
+
+4）、进入 uxdb-ng\uxdb-2.1\src\tools\msvc 目录，命令行执行 build.bat 进行编译；
+
+6、编译成功之后可以执行 install.bat XXX（安装路径，例如D:\uxdbinstall，最好指定非系统路径，避免写入权限问题）
+   进行安装，测试使用；或者直接在 uxdb-ng\uxdb-2.1\tmp_install 路径下进行测试使用。
+
+
+windows编译使用dll方法：
+https://blog.csdn.net/u012633319/article/details/113666273
+
+注意点：
+工程引用编译的dll，需要将dll拷贝到工程编译路径下；
+
+
 
 
 windows版本历史：
@@ -10576,6 +10774,10 @@ Scaffold-DbContext "Host=192.71.0.137;Database=uxdb;Username=uxdb;Password=1" Np
 
 msi 解压命令msiexec
 msiexec /a  "F:\git\Npgsql-4.0.9.msi" /qb TARGETDIR="F:\git\npgsql"
+
+
+Npgsql.EntityFrameworkCore.PostgreSQL 示例：
+https://www.npgsql.org/efcore/index.html
 
 
 Benchmark工具使用：
@@ -10886,6 +11088,9 @@ https://www.bilibili.com/video/av374923818
 
 windows dll系统库搜索链接：
 https://www.dll-files.com/
+
+windows dll库生成&使用:
+https://blog.csdn.net/DeliaPu/article/details/131008103
 
 
 izpack问题：
@@ -13873,11 +14078,9 @@ Midjourney使用教程：
 https://www.163.com/dy/article/I0KKE30S05561X2T.html
 
 
-odbc:
 
-1、unixodbc不存在
-安装
-sudo yum install unixODBC-devel.x86_64 -y
+
+3、odbc用例
 
 2023-03-31
 
@@ -14365,6 +14568,31 @@ yum源链接：http://download.cs2c.com.cn/neokylin/server/releases/5.2/ls_64/os
 
 
 2023-04-20
+.net相关：
+.net介绍：
+
+.net包含.net Framework与.net core
+.net core是.net Framework的升级，.net core可以跨平台使用；
+.net、.net core与Entity Framework区别：
+1、
+Entity Framework是为.NET Framework设计的
+Entity Framework 对应Npgsql的库，通过以下命令安装：
+Install-Package Npgsql
+这将会安装Npgsql驱动以及与Entity Framework集成所需的相关依赖项
+2、
+Entity Framework Core是.NET平台的一个组件，它是.NET Core中的官方ORM（对象关系映射）框架，用于简化数据库操作和数据访问；
+Entity Framework Core是专为.NET Core设计的；
+Entity Framework Core对应Npgsql的库，通过以下命令安装：
+Install-Package Npgsql.EntityFrameworkCore.PostgreSQL
+3、
+npgsql在3.1版本及以后支持.net core
+
+关于Entity Framework Core介绍，以及简单用例编写，Entity Framework Core就是用C#语句实现sql操作：
+https://blog.csdn.net/lihuxie/article/details/132677571
+Entity Framework Core官方网址：
+https://learn.microsoft.com/zh-cn/ef/core/
+
+
 
 使npgsql在linux可以使用：
 centos x86:
@@ -14482,6 +14710,8 @@ dotnet build -c Release Nuxsql.sln -p:FrameworkPathOverride=“dotnet的sdk安�
 src/Npgsql/bin/Release/net7.0/Npgsql.dll
 
 
+要使用 Entity Framework Core PostgreSQL 库，需要先安装 NuGet 包,安装命令：
+Install-Package Npgsql.EntityFrameworkCore.PostgreSQL
 
 
 
@@ -14525,6 +14755,9 @@ varbit更类似mysql bit类型，但比较操作符转换还是需要开发；
 
 bit类型调研：
 mysql：
+
+bit操作符：
+https://dev.mysql.com/doc/refman/5.7/en/bit-value-literals.html
 
 调研内容：
 首先介绍bit类型
@@ -15163,4 +15396,1584 @@ sudo service uxinodb restart
 
 ip：
 192.71.1.10-192.71.1.14
+
+铁塔POC包支持问题单：186842 
+
+
+repmgr:
+
+repmgr问题：
+主机：13机器
+备机：14机器
+主机13机器stop后，备机14机器未升主成功（此现象必现）；
+
+调查过程：
+1、查看备机14机器日志，通过查看代码初步分析是系统函数system返回值问题，后恢复主备环境，此时13机器为备机，14机器为主机，将14机器stop后，13机器可以升主成功，但14机器未启动成功，且日志报错也是system报错，故推测只有14机器执行system函数时返回值有问题，故调查从14机器system返回值问题切入
+2、在14机器本地构造测试代码，system执行系统命令返回正常，然后测试主备切换命令，由于切换命令返回状态与当时数据库状态有关，故需改repmgrd守护进程代码，添加system返回值日志，将修改后的守护进程repmgrd替换到14机器，并还原出错前主备状态（13主、14备），由于替换了14机器守护进程，故需要重启14机器守护进程，查看状态正常后（13主、14备），stop 13机器后，查看添加日志，发现system返回值正常，此时查看主备环境切换正常，之后重复执行6次，主备切换正常
+
+3、回想之前操作步骤只进行了2步（1、替换repmgrd 2、重启守护进程）
+repmgrd代码改动只加了日志，其他未作修改，故推测可能是守护进程重启后导致主备切换正常，将替换前的repmgrd还原，之后重复主备切换6次，发现主备切换正常；
+4、
+查看客户机器守护进程是23年4月份启动，后面可能有做操作，14机器/tmp/repmgrd.pid找不到，然后重启后正常，13机器有同样问题存在；
+
+调查结果：
+通过以上分析，可知主备未切换成功原因：守护进程未正常启动导致system系统函数返回值异常
+
+
+
+而且备机system其他命令也有问题
+
+2023-06-26
+问题单：186970
+优化自启动脚本：
+
+2023-06-27
+
+youxian写操作：
+
+方案设计
+1、非优先写未完成，当写写冲突时，rollback非优先写操作，然后执行youxian写操作，完成后再重新执行非优先写；
+2、如果同时带优先写，保持原逻辑不变
+
+
+2023-06-29
+
+研发需求：
+针对 ver2.1.0.4.10 + uxmpp 8.2.1的环境，使用ver2.1.0.3 版本配套的 uxmpp_utility 进行扩缩容测试。
+如果无法正常加载，那么基于对应环境，用ver2.1.0.3 中的 uxmpp_utility 代码适配编译一个 对应的包。
+
+ver2.0.4.10 的包 和 uxmpp 8.2.1的包获取路径：
+http://cd.uxsino.com:24080/index.php/f/3801484
+http://cd.uxsino.com:24080/index.php/f/3801472
+
+ver2.1.0.3对应的现有的  uxmpp_utility 包。
+http://cd.uxsino.com:24080/index.php/f/3808453
+
+ver2.1.0.3 代码分支 ：hotfix/ver2.1.0.3p文江
+
+
+
+查询正常sql：
+def query_user():
+    session = DBSession()
+    request_args = {"name":"2023","age":"12"}
+    q_user = session.query(User).filter_by(**request_args)  # one表示结果有且仅有一个
+    print("##############################this is q_user")
+    print(q_user)  # 输出查询语句
+    print("##############################this is q_user end!!!")
+    query = q_user.first()
+
+
+def query_user():
+    session = Session(engine)
+    request_args = dict(name='2023', age=30)
+    results1 = session.query(User).filter_by(**request_args)
+	data1 = [dict(zip(result.keys(), result)) for result in results1]
+	data = [{**d1} for d1 in zip(data1)]
+
+
+python报错：
+"Could not determine version from string '%s'" % v
+AssertionError: Could not determine version from string 'UXsinoDB 2.1.1.5D on x86_64-pc-linux-gnu
+
+解决方法：
+CREATE OR REPLACE FUNCTION ux_catalog.version()
+RETURNS text AS $$
+	SELECT 'PostgreSQL 12.3 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-16), 64-bit';
+$$ LANGUAGE SQL;
+
+该报错提示指出操作符不存在，因为传递的参数类型不匹配。根据报错信息，year的值被解释为数组类型（text[]），而数据库中的列year的类型是bigint类型。
+通过查看python脚本，python解析curl的字串后，获取的键值对request_args如下：{'year': ['2023']}；
+
+解决这个问题的一种方法是将 request_args 中的值从数组类型转换为字符串类型。使用列表解析或循环来处理每个键值对，并将值转换为字符串。
+代码如下：
+# 转换 request_args 中的值为字符串
+request_args = {k: v[0] for k, v in request_args.items()}
+
+
+2023-07-07
+
+EXEC SQL LOB READ :amt FROM :blob AT :offset INTO :buff;
+:amt参数指定要读取的数据量，可以是字节数或字符数，取决于LOB对象的类型。
+:blob参数指定要读取数据的LOB对象。
+:offset参数指定从LOB对象的哪个位置开始读取数据。可以是一个具体的偏移量，表示从LOB对象的特定位置开始读取；也可以是一个变量，动态地指定偏移量。
+:buff参数指定一个目标缓冲区，用于存储从LOB对象中读取的数据。
+
+作用：从LOB对象中读取指定数量的数据，然后将其存储到提供的缓冲区中
+
+EXEC SQL LOB WRITE ONE :messlen FROM :buffer INTO :lob;
+EXEC SQL LOB WRITE FIRST :amt FROM :buffer INTO :blob AT :offset;
+EXEC SQL LOB WRITE NEXT :amt FROM :buffer INTO :blob;
+EXEC SQL LOB WRITE LAST :amt FROM :buffer INTO :blob;
+
+
+//大对象sq1方式插入
+exec sql allocate descriptor 'in_lobInsert';
+EXEC SOL PREPARE s_lobInsert FROM :m_statement;
+EXEC SQL DESCRIBE INPUT s_lobInsert USING DESCRIPTOR 'in_lobInsert';
+occurs = 0;
+iPos=0;
+for (i=0;i<stDbInfo->col_count; i++)
+{
+	occurs = m_pos[i];
+	switch (stDbInfo->m_colType[il)
+{
+case 3:
+	memset(cNumValue,0,100) :
+	memcpy(&l,&szCommonValue[iPos],2);
+	iPos=iPos+2;
+	memcpy(cNumValue,&szCommonValue[iPos],l);
+	m_type=stDbInfo->m_colType[i];
+	m_length=stDbInfo->m_colLength[i];
+	iTemp[i]=atoi(cNumValue);
+if(l != 0)
+	EXEC SOL SET DESCRIPTOR 'in_lobInsert' VALUE :occurs TYPE=:m_type,LENGTH=:m_length,ref DATA=:&iTemp[i];
+else
+	EXEC SOL SET DESCRIPTO 'in_loInsert' VALUE :ocurs TYPE=:m_type,LENGTH=:m_length,INDICATOR-:comm_ind,ref DATA=:&iTemp[i];
+iPos=iPos+l+1;
+simple_counter++;
+break;
+}
+}
+exec sql execute s_lobInsert using sql descriptor 'in_lobInsert';
+
+//批量插入
+exec sql context use :m_batchcontext;
+exec sql for :m_inRows allocate descriptor 'in_insert';
+exec sql prepare s_insert from :m_statement;
+exec sql describe input s_insert using descriptor 'in_insert';
+for (i=0;i<iinput_count;i++)
+{
+occurs++;
+m_intype[i] = m_tableinParam->m_intype[i];
+m_inlength[i] = m_tableinParam->m_inlength[i];
+m_value[i] = row_value[il;
+EXEC SOL FOR :m_inRows SET DESCRITOR 'in_insert' VALUE :occurs TYPE=:m_intype[i],LENGTH=:m_inlength[i],ref DATA=:m_value[i];
+}
+EXEC SQL FOR :m_inRows EXECUTE s_insert USING SQL DESCRIPTOR 'in_insert';
+EXEC SOL WHENEVER SOLERROR CONTINUE;
+EXEC SOL DEALLOCATE DESCRIPTOR 'in_insert';
+
+
+
+//批量查询
+EXEC SQL FOR :iRowsCount ALLOCATE DESCRIPTOR 'BQ_OUT';
+EXEC SQL PREPARE bq_sql FROM :szSql;
+EXEC SQL DECLARE bq_cur CURSOR FOR bq_sql;
+EXECSQL DESCRIBE OUTPUT bq_sql USING DESCRIPTOR 'BQ_OUT';
+do
+{
+	for (int i=0;i<g_stStructInfo.m_vcInfo.size(); i++)
+	{
+		iOccurs++;
+		stColInfo =g_stStructInfo.m vcInfo[i];
+		EXEC SQL SET DESCRIPTOR 'BQ_OUT' VALUE :iOccurs TYPE=:stColInfo.m_type, LENGTH=:stColInfo.m_length;
+		EXEC SQL FOR :iRowsCount SET DESCRIPTOR 'BQ_OUT' VALUE :iOccurs REF DATA=:pDat, REF INDICATOR=:pInd;
+	}
+	for (;;)
+	{
+		iCurnt = sqlca.sqlerrd[2];
+		iRem = stQDInfo->m_rowsCount - iTotal;
+		if (iRem == 0) break;
+		iRowsCount=(iRem > PAGE_COUNT) ? PAGE_COUNT:iRem;
+		EXEC SQL FOR :iRowsCount FETCH bq_cur INTO DESCRIPTOR 'BQ_OUT';
+		iCurnt = sqlca.sqlerrd[2] - iCurnt;
+		CopyToDst(g_stStructInfo,iTotal, iCurnt， szRecBuf);
+		iTotal += iCurnt;
+		if(sqlca.sqlcode == 1403)
+			break;// 取出所有数据 跳出循环
+	}
+	while(0);
+}
+
+//bind 金仓测试出问题的语句
+EXEC SOL CONTEXT USE :ctx;
+exec sql whenever sqlerror goto get_info_error;
+EXEC SOL WHENEVER NOT FOUND CONTINUE:
+EXEC SQL ALLOCATE DESCRIPTOR 'out_dml';
+EXEC SQL PREPARE s_dml FROM :m_statement;
+EXEC SOL DESCRIBE OUTPUT s_dml USING DESCRIPTOR 'out_dml';
+EXEC SQL GET DESCRIPTOR 'out_dml' :m_count=COUNT;
+m_recInfo->col_count=m_count;
+occurs=0;
+/*初始化大字段列表为空 ZXQ */
+memset(m_recInfo->m_lobColsName,0,MAXSTATEMENTLEN/5);
+for (i=0;i<m_recInfo->col_count;i++)
+{
+	occurs++;
+	EXEC SQL GET DESCRIPTOR 'out_dml' VALUE :occurs :m_type=TYPE,:m_lenght=LENGTH,:m_prec=PRECISION,:m_scale=SCALE,:m_colName
+	m_recInfo->m_colType[i]=m_type;
+	m_recInfo->m_colLength[i]=m_lenght;
+	ret=Datatype_Classify(&(m_recInfo->m_colType[i]),&(m_recInfo->m_collength[i]),m_prec,m_scale,&(m_recInfo->lob_in));
+	switch (ret)
+	{
+		case 1:
+			break;
+		case 2:
+			l=strlen(m_recInfo->m_lobColsName);
+			break;
+		default:
+			m_errNO = -80042;
+			goto get_info_error;
+	}
+}
+exec sql deallocate descriptor 'out_dml';
+return 1;
+
+/*第五部分*/
+EXEC SQL FOR :iRowsCount ALLOCATE DESCRIPTOR 'BQ_OUT';
+EXEC SQL PREPARE bq_sql FROM :szSql;
+EXEC SQL DECLARE bq_cur CURSOR FOR bq_sql;
+EXEC SQL DESCRIBE OUTPUT bq_sql USING DESCRIPTOR 'BQ_OUT';
+do
+{
+	for (int i=0;i<g_stStructInfo.m vcInfo.size();i++)
+	{
+		iOccurs++;
+		stColInfo =g_stStructInfo.m_vcInfo[i];
+		EXEC SQL SET DESCRIPTOR 'BQ_OUT' VALUE :iOccurs TYPE=:stColInfo.m_type, LENGTH=:stColInfo.m_length;
+		EXEC SQL FOR :iRowsCount SET DESCRIPTOR 'BQ_OUT' VALUE :iOccurs REF DATA=:pDat, REF INDICATOR=:pInd;
+	}
+	for (;;)
+	{
+		iCurnt = sqlca.sqlerrd[2];
+		iRem = stQDInfo->m_rowsCount - iTotal;
+		if (iRem = 0) break;
+		iRowsCount = (iRem > PAGE_COUNT) ? PAGE_COUNT:iRem;
+		EXEC SQL FOR :iRowsCount FETCH bq_cur INTO DESCRIPTOR 'BQ_OUT';
+		iCurnt = sqlca.sqlerrd[2] - iCurnt;
+		// 拷贝到缓冲区
+		CopyToDst(g_stStructInfo,iTotal，iCurnt, szRecBuf);
+		iTotal += iCurnt;
+		//1403查不到数据或查到的数据少于想要 取出的行数
+		if(sqlca.sglcode ==1403)
+			break;//取出所有数据 跳出循环
+	}
+	while(0);
+}
+
+proc相关问题单：
+186700 
+
+Pro*C介绍：
+下面是一些 Pro*C 语法的详细解释：
+
+EXEC SQL：这是 Pro*C 中的一个特殊指令，用于指示接下来的语句是 SQL 或 PL/SQL 语句。
+
+EXEC SQL INCLUDE：这个指令用于包含预定义的 SQLCA 和 ORACA 结构的头文件。SQLCA 是一个结构体，用于获取 SQL 语句的执行结果和错误信息。
+
+EXEC SQL WHENEVER：这个指令用于定义 SQL 执行过程中遇到错误时的处理行为。例如，EXEC SQL WHENEVER SQLERROR 表示如果 SQL 语句执行出错，则执行相应的操作。
+
+EXEC SQL BEGIN DECLARE SECTION 和 EXEC SQL END DECLARE SECTION：这两个指令用于在 C/C++ 代码中声明数据库相关的变量。在 BEGIN DECLARE SECTION 和 END DECLARE SECTION 之间的代码块中，可以声明数据库连接、游标、绑定变量等相关的变量。
+
+EXEC SQL CONNECT：这个指令用于建立与 Oracle 数据库的连接。
+
+EXEC SQL PREPARE 和 EXEC SQL EXECUTE：PREPARE 用于准备一个 SQL 语句以供执行，而 EXECUTE 用于执行预先准备好的 SQL 语句。
+
+EXEC SQL SELECT：这个指令用于执行 SELECT 查询语句，并将结果存储在 C/C++ 变量中。
+
+EXEC SQL FETCH：这个指令用于从游标中提取下一行结果，并将结果存储在 C/C++ 变量中。
+
+EXEC SQL CLOSE：这个指令用于关闭游标。
+
+EXEC SQL COMMIT 和 EXEC SQL ROLLBACK：这两个指令用于提交或回滚事务。
+
+
+
+proc编译报错：
+根据报错信息，提示说这些用法仅在指定 DYNAMIC=ANSI 时才有效。因此，你需要在编译时指定 DYNAMIC=ANSI。
+请修改编译命令，添加 DYNAMIC=ANSI 选项，例如：
+
+proc iname=testwq.pc sqlcheck=full DYNAMIC=ANSI
+
+proc语法：
+1、EXEC SQL INCLUDE <header_file>;：该语句用于引入特定的 ProC 头文件
+2、EXEC SQL PREPARE 语句是 Pro*C/C++ 中的一个关键语句，用于预编译 SQL 查询语句或 PL/SQL 块。
+
+3、BEGIN DECLARE SECTION 和 END DECLARE SECTION 之间声明需要在 SQL 语句中使用的 C 变量，用于声明 C 变量和 SQL 声明之间的分隔符；eg：
+EXEC SQL BEGIN DECLARE SECTION;
+    char query[100] = "SELECT * FROM employees WHERE department_id = :dept_id";
+    int department_id = 10;
+EXEC SQL END DECLARE SECTION;
+
+EXEC SQL WHENEVER <condition> <action>;：这个语句用于设置错误处理机制。<condition> 可以是 SQLERROR（SQL 错误）或 NOT FOUND（未找到结果）。
+<action> 可以是 CONTINUE（继续执行后续语句）或 GOTO <label>（跳转到指定标签处）。通过设置错误处理机制，可以在 SQL 执行过程中检测到错误并采取相应的处理措施。
+
+4、EXEC SQL DECLARE 语句是 Pro*C/C++ 中用于声明和定义游标的语法。
+游标是用于在 SQL 查询中遍历结果集的一种机制。下面是 EXEC SQL DECLARE 语句的详解和示例：
+语法：EXEC SQL DECLARE cursor_name CURSOR FOR query_statement;
+示例：
+EXEC SQL BEGIN DECLARE SECTION;
+    int department_id = 10;
+EXEC SQL END DECLARE SECTION;
+
+EXEC SQL DECLARE emp_cursor CURSOR FOR
+    SELECT * FROM employees WHERE department_id = :department_id;
+
+通过声明游标后，可以使用 EXEC SQL OPEN、EXEC SQL FETCH 和 EXEC SQL CLOSE 等语句对游标进行操作，实现对结果集的遍历和数据操作。
+
+EXEC SQL FETCH使用方法：
+示例：
+EXEC SQL BEGIN DECLARE SECTION;
+    int department_id = 10;
+    char employee_name[50];
+    int employee_salary;
+EXEC SQL END DECLARE SECTION;
+
+EXEC SQL DECLARE emp_cursor CURSOR FOR
+    SELECT name, salary FROM employees WHERE department_id = :department_id;
+
+EXEC SQL OPEN emp_cursor;
+
+while (1) {
+    EXEC SQL FETCH emp_cursor INTO :employee_name, :employee_salary;
+    if (SQLCODE != 0) {
+        break;  // 无更多数据，退出循环
+    }
+    // 处理获取的数据
+    printf("Name: %s, Salary: %d\n", employee_name, employee_salary);
+}
+
+EXEC SQL CLOSE emp_cursor;
+
+5、EXEC SQL ALLOCATE DESCRIPTOR 'out_dml'; 是 Pro*C/C++ 语法，用于分配一个描述符。描述符是一个用于存储关于数据结构和数据类型的信息的对象。
+在 Pro*C/C++ 中，描述符通常用于处理动态 SQL 查询的结果集或对大对象（LOB）的操作。
+	
+EXEC SQL ALLOCATE DESCRIPTOR 'out_dml';
+EXEC SQL PREPARE s_dml FROM :m_statement;
+EXEC SOL DESCRIBE OUTPUT s_dml USING DESCRIPTOR 'out_dml';
+EXEC SQL GET DESCRIPTOR 'out_dml' :m_count=COUNT;			//该语句将从描述符 'out_dml' 中获取 COUNT 值，并将其赋值给变量 value，COUNT 是描述符属性，用于获取结果集的列数。
+
+以上语句将m_statement语句输出的结果集存储到描述符'out_dml'中；
+
+EXEC SQL DESCRIBE描述符与定义游标EXEC SQL DECLARE有什么区别：
+
+EXEC SQL DESCRIBE： 语句用于描述查询结果集的元数据，例如列名、数据类型、长度等。
+EXEC SQL DECLARE：用于声明和定义游标，以便在程序中遍历和操作查询结果集
+
+EXEC SQL GET DESCRIPTOR 'out_dml' VALUE :occurs :m_type=TYPE,:m_lenght=LENGTH;		//:occurs 变量的值应该是一个整数，表示要获取的列的索引位置。通常，索引从 1 开始，依次递增。
+
+
+金仓proc编译方式：
+proc iname=testwq.pc sqlcheck=full DYNAMIC=ANSI
+gcc -I /home/uxdb/kbproc/include/ -I /home/uxdb/kbproc/include/oci/ -L /home/uxdb/kbproc/lib/ -lclntsh -lsqllib -o testwq testwq.c
+
+oracle编译方式：
+proc iname=testwq.pc sqlcheck=full DYNAMIC=ANSI
+gcc testwq.c -L$ORACLE_HOME/lib -lclntsh -o testwq
+
+https://blog.csdn.net/sxqinjh/article/details/127388037
+
+
+修改用户密码：
+登录
+ALTER USER MDSYS IDENTIFIED BY 123456;
+
+the account is locked：用户被锁定后，解锁命令：
+ALTER USER MDSYS ACCOUNT UNLOCK;
+
+proc相关语法设置：
+
+配置链接oracle的proc代码：
+相关文件：ora_test.pc
+修改点：
+1、引用ORACA结构体
+EXEC SQL INCLUDE SQLCA; /* 说明一个 SQL 通信区 */
+EXEC SQL INCLUDE ORACA; /* 说明一个 SQL 通信区 */
+
+2、添加报错函数，其中通过sqlca.sqlcode、sqlca.sqlerrm.sqlerrmc获取错误码
+    void handle_error() {
+        printf("SQL error occurred:\n");
+        printf("Error code: %d\n", sqlca.sqlcode);
+        printf("Error message: %s\n", sqlca.sqlerrm.sqlerrmc);
+        exit(1);
+    }
+3、链接oracle 字串信息：
+
+    char username[30] = "mdsys";
+    char password[30] = "123456";
+    char connection_string[100] = "192.72.1.76:1521/orcl";			//oracle连接串设置
+	/* 连接数据库 */
+    EXEC SQL CONNECT :username IDENTIFIED BY :password USING :connection_string;
+
+4、编译proc方式
+proc iname=ora_test.pc sqlcheck=full DYNAMIC=ANSI
+gcc ora_test.c -L$ORACLE_HOME/lib -lclntsh -o ora_test
+
+
+oracle问题：
+1、插入数据其他客户端查不到
+
+原因：oracle默认未commit，但存在自动commit，隔的时间比较长
+
+
+2023-07-13
+
+人大金仓官网：
+https://www.kingbase.com.cn/tyxsjk/index.htm
+
+金仓安装教程：
+https://blog.csdn.net/yang_z_1/article/details/123252832
+
+安装后
+/home/uxdb/Kingbase/Server/bin
+
+
+
+
+现场反馈2个需求：
+相关问题单：
+186397
+
+oracle官方文档：
+proc语法相关文档：
+Pro*C/C++ Programmer's Guide
+
+
+1、for 语法
+EXEC SQL FOR 语法修改
+
+
+char d_data1[5][500];
+EXEC SQL FETCH 4 FROM mem_c_lobquery INTO SQL DESCRIPTOR mydesc;
+/*for(i = 0; i < 5; i++)
+{
+EXEC SQL GET DESCRIPTOR mydesc VALUE 1 :d_data1 = DATA;
+printf("d_data1 = %s\n", d_data1);
+}*/
+
+EXEC SQL GET DESCRIPTOR mydesc VALUE 1 :d_data1 = DATA;			//对于多行数据，需要通过数据方式接收数据；
+for(i = 0; i < 4; i++)
+{
+        printf("d_data1 = %s\n", d_data1[i]);
+}
+
+
+
+
+
+2、大对象操作语法
+LOB语法有：
+EXEC SQL LOB READ :amt FROM :blob AT :offset INTO :buffer;
+EXEC SQL LOB WRITE ONE :messlen FROM :buffer INTO :lob;
+EXEC SQL LOB WRITE FIRST :amt FROM :buffer INTO :blob AT :offset ;
+EXEC SQL LOB WRITE NEXT :amt FROM :buffer INTO :blob ;
+EXEC SQL LOB WRITE LAST :amt FROM :buffer INTO :blob ;
+
+
+
+
+EXEC SQL FOR 语法：
+Pro*C/C++ Programmer's Guide 第8节
+EXEC SQL FOR :limit FETCH emp_cursor INTO DESCRIPTOR 'OUTPUT'
+
+
+EXEC SQL FOR 子句用来设置由以下任何 SQL 语句处理的数组元素的数量,
+DELETE
+
+EXECUTE
+
+FETCH
+
+INSERT
+
+OPEN
+
+UPDATE
+
+
+
+ecpg使用方式：
+
+main.cpp
+编译方式：
+ecux -o dbapi.cpp
+
+proc相关问题单：
+186769、
+
+数据库参数修改：
+1、log_statement = 'all'			//sql打印获取
+2、log_connections = on				//切换sql会话链接验证
+
+
+1、SDatabaseInfo 结构体中私有、共有链接
+2、链接为空问题
+3、begin、end问题
+
+2023-08-22
+
+大连银行项目（#191400）
+
+项目名称：大连银行新一代信息化建设项目-大连银行基础软硬件采购项目(一期) -分布式数据库直接立项对应商机
+项目编号：A02435246202210963
+
+
+
+
+2023-08-23
+
+调研mysql：
+TINYINT与bit类型
+
+BOOL，BOOLEAN是TINYINT(1)的同义词；
+
+
+CREATE TYPE tinyint AS (value smallint);
+
+CREATE FUNCTION mysql_tinyint_to_ux_tinyint(mysql_value smallint) RETURNS tinyint AS $$
+BEGIN
+    RETURN ROW(mysql_value)::tinyint;
+END;
+$$ LANGUAGE pluxsql;
+
+CREATE FUNCTION ux_tinyint_to_mysql_tinyint(ux_value tinyint) RETURNS smallint AS $$
+BEGIN
+    RETURN ux_value.value;
+END;
+$$ LANGUAGE pluxsql;
+
+CREATE TABLE test_table (
+    id serial PRIMARY KEY,
+    flag tinyint DEFAULT ROW(0)::tinyint
+);
+
+门户系统数据库适配群（#191051）
+
+#191051:兼容门户系统数据库适配TINYINT类型
+开始时间：2023-08-23
+结束时间：2023-08-25
+描述：调研TINYINT类型，分析实现方案
+
+
+CREATE DOMAIN tinyint
+
+  AS smallint
+
+  CONSTRAINT tinyint_check CHECK (VALUE >= 0 AND VALUE <= 255);
+
+ALTER DOMAIN tinyint
+
+  OWNER TO uxdb;
+
+COMMENT ON DOMAIN tinyint
+
+  IS 'tinyint type between 0 and 255';
+
+
+高斯源码下载：
+https://gitee.com/opengauss/openGauss-server
+
+pg新添加一个typle类型：
+
+涉及文件：
+1:ux_type.data		添加类型
+2:ux_proc.data		实现类型函数
+3:utils/adt			路径添加ux_proc对应函数实现
+4:ux_cast.data		//添加隐式转换
+
+隐士转换：
+1、ux_cast.data			//添加隐士转换
+2、ux_proc.data			//添加对应转换函数
+
+
+
+
+get_DSN_or_Driver
+获取DSN参数值：
+getDSNinfo
+
+
+odbcinst -q -s -n uxdb		//获取DNS对应的参数信息
+
+修改成这种方式：
+uxdb@127.0.0.1:5432
+
+uxdb@192.71.1.11:5432
+
+
+
+
+2023-09-08
+
+常见问题总结：
+
+1、c++源码，在linux编译没问题，但在windows编译，提示好多：语法错误，例如：“缺少;、{”引用问题，变量定义问题
+解决方法：
+
+存在重复引用问题、同名文件应该添加目录的时候会出问题
+
+
+咱们本地如何模拟构造windows编译，还需要哪些；
+
+
+C99编译器支持bool类型，
+stdbool.h于C99中引入，C99是Visual C ++ 2013的引入；
+
+#pragma comment(lib,"libecux")			//vs c++引用动态库，在c++源码中添加；
+
+
+2023-09-19
+
+#189684: 二十八所项目proc*c适配
+二十八所适配主要工作内容：
+1、协助现场适配RSHANDLE句柄相关proc接口；
+2、批量查询代码修改，修改后存在死循环报错（待处理）
+3、本地实现链接串通过odbc配置文件DNS服务名获取；
+4、解决现场windows编译问题，并实现odbc链接串；
+5、dll链接应用程序报错分析；
+
+#191051:兼容门户系统数据库适配TINYINT类型	（完成50%）
+#191051：门户系统数据库适配支持
+#162840：交通委项目打包支持
+
+
+
+
+
+
+52.92 + 81.93 + 84.96 + 46.47 = 266.28
+
+
+418.71 
+
+327.24 + 81.93 + 84.96
+
+
+
+南京二十八：
+
+修改内容记录
+1、odbc相关修改
+1）
+修改文件路径：
+unixodbc-2.3.12\include\sqltypes.h
+修改内容：
+TCHAR修改为UXTCHAR
+WCHAR修改为UXWCHAR
+
+2）
+unixodbc修改：
+a、linux
+修改文件路径：
+unixodbc-2.3.12\include\odbcinst.h
+修改内容：
+注释下面代码：
+#define  SQLGetPrivateProfileString     SQLGetPrivateProfileStringW
+
+b、windows：
+dns获取windows使用接口GetPrivateProfileStringA：文档中有记录：
+GetPrivateProfileStringA
+
+
+2、proc相关问题单：
+
+select to_char(update_time, 'yyyy-mm-dd hh24:mi:ss') from AD_MENU_CONFIG where unit_name = '1';
+
+create table AD_MENU_CONFIG(update_time timestamp, unit_name int);
+insert into AD_MENU_CONFIG values('2023-10-1',1);
+
+动态库编译命令
+g++ -shared -o libdbapi.so demo_project.cpp
+
+链接动态库命令：
+g++ -o demo_dbapi demo_project.cpp -ldbapi -L/home/uxdb/uxdbinstall/dbsql/bin
+
+3、现场应用报错记录
+
+1）语法错误
+a、select语句字段存在‘双,’报错: eg：select mbnm,,mbfx from tb;
+
+b、where()报错，eg：select zbnm from tb where();
+
+
+
+2）右边不存在报错
+
+游标C1不存在报错：
+eg：
+declare C1 cursor for select语句;
+
+3) sql编码报错：
+修改客户端编码
+client_encoding = GBK  
+
+
+4、ecpg源码问题记录
+
+-DUXDB_ECUX_INTERNAL 用于取消获取sqlca错误码；
+
+错误回调函数，哪个在最后，调用哪个；
+例如，下面goto在最后，回调调用goto语句；
+EXEC SQL WHENEVER SQLERROR CALL
+EXEC SQL WHENEVER SQLERROR GOTO 
+
+5、linux编译odbc步骤如下，windows使用odbc见链接connect路径
+
+odbc:
+
+A、unixodbc不存在
+安装
+sudo yum install unixODBC-devel.x86_64 -y
+
+B、error: odbc_config not found (required for unixODBC build)
+修改--with-unixodbc参数为：
+--with-unixodbc=/usr/bin/odbc_config
+
+C、获取不到系统函数
+SQLGetPrivateProfileString
+
+-lodbcinst
+
+D、编译odbc测试用例：
+
+g++ main.cpp -lodbc -luxsql -lodbcinst -L /home/uxdb/uxdbinstall/dbsql/lib -o demo_odbc -g
+
+E、odbc配置文件设置：
+export ODBCSYSINI=/opt/uxdbinstall/unixODBC/etc
+export ODBCINI=/opt/uxdbinstall/unixODBC/etc/odbc.ini
+
+编译的话，需要加-lodbcinst：
+g++ main.cpp  -lodbcinst -L /home/uxdb/uxdbinstall/dbsql/lib -o demo_odbc -g
+
+F、
+odbc主线配置文件路径：
+dbsql/lib/oci/config.ini
+
+6、宏定义UXDB_ECUX_INTERNAL的作用：
+
+咱两现象不一致是-DUXDB_ECUX_INTERNAL这个宏导致的，用你的传参的方式， 获取不到错误信息，
+ecpg是通过ECUXget_sqlca函数来申请内存，并与当前线程信息进行关联；ECUXget_sqlca这个函数是通过DUXDB_ECUX_INTERNAL进行控制的，
+当添加DUXDB_ECUX_INTERNAL宏后，sqlca就不会调用ECUXget_sqlca函数；修改方法：
+1）、 makefile里面应该加了这个-DUXDB_ECUX_INTERNAL宏，所以导致全局变量没生效， 你可以把这个宏去了试下
+2）、在proc.pc里面添加宏定义，Makefile中需要添加宏 -DUXDB_ECUX_INTERNAL：#define sqlca (*ECUXget_sqlca())
+
+7、大对象注意问题
+大对象测试用例Lob_Insert_Data_Mem，数据需要带双引号，因为代码中存在strlen获取字串长度，所以传参必须为字串;
+Lob_Query_Data_Mem, 接收数组按照前面字段顺序；
+
+Lob_Query_Data与Lob_Query_Data_Mem，对于普通字段字符串接收数组，接收数组需要大于实际类型长度，否则windows会报core问题；
+
+8、ecux中 使用语法DESCRIBE INPUT问题：
+有问题接口：
+Lob_Insert_Data_Proc
+Lob_Update_Data_Proc
+Lob_Update_Data_Proc_mem
+Lob_Insert_Data_Proc_Mem
+Batch_Bind_Value_Proc
+
+20231220：
+去现场最新修改点：
+a、修改大对象描述符语法；
+b、修改大对象numeric条件判断，将其修改为与oracle条件一致；
+c、查看oracle原始大对象字符串获取类型；
+
+
+9、现场glibc版本2.23
+
+2023-12-28
+
+
+现场数据200GB
+
+2023-12-29
+
+最新问题：
+
+本地测试numeric类型不带精度，走的int逻辑，因为precision不等于0，但现场代码numeric应该走double逻辑；
+
+验证numeric类型，分别验证类型：numeric、numeric(38,0),numeric(4,2);
+验证float类型：
+create table tb(V1 float, v2 float(4),v3 float(8),v4 float(64), V5 float(126));
+
+
+
+
+疑问：
+
+周工，关于应用调试，我们有几个问题麻烦你下，好继续安排我们接下来的任务：
+1、启动应用后有几个应用会报错，这些报错解决完之后，是否应用算是调通了，
+我看应用界面上还有一些选项按钮，是否我们这边还需要测试这些按钮功能是否正常，
+这些都调通才能算我们应用已经调通吗，还是还有其他应用界面需要调试；
+
+2、我们批量查询和批量插入还未开发，对目前阶段的应用调试有什么影响没，
+是否有基本的功能也有调用到批量查询、插入功能；
+
+
+
+2023-10-11
+
+1、单个应用进程有大量sql，无法进行调试
+2、有多个崩溃应用链接
+
+
+CREATE TABLE zzll_gjgwry_fxy_ydxlqk(
+ND CHARACTER VARYING(15) NOT NULL,
+YF CHARACTER VARYING(15) NOT NULL,
+
+SFZHM CHARACTER VARYING(20) NOT NULL,
+DWDM CHARACTER VARYING(7) NOT NULL,
+FXYDH CHARACTER VARYING(4),
+BYJHSJ NUMERIC,
+BYZSJ NUMERIC,
+XFJXBYSJ NUMERIC,
+RJSJBY NUMERIC,
+BYRJSJ NUMERIC,
+BYHSSJ NUMERIC,
+BYZJSJ NUMERIC,
+BYYJSJ NUMERIC,
+BYZSSJ NUMERIC,
+BYACSJ NUMERIC,
+BYZYSJ NUMERIC,
+BYYYSJ NUMERIC,
+BYZZHCC NUMERIC,
+BYFZHCC NUMERIC,
+BYFXZJC NUMERIC,
+BYTCSJ NUMERIC,
+BYDAIFSJ NUMERIC,
+BYDANFSJ NUMERIC,
+BYRWSJ NUMERIC,
+BYXJKMSJ NUMERIC,
+BYZZHCC_ZJ NUMERIC,
+BYZZHCC_YJ NUMERIC,
+BYZZHCC_KZY NUMERIC,
+BYZZHCC_XBY NUMERIC,
+BYFZHCC_ZJ NUMERIC,
+BYFZHCC_YJ NUMERIC,
+BYFZHCC_KZY NUMERIC,
+BYFZHCC_XBY NUMERIC,
+SYN_NM CHARACTER VARYING(32) NOT NULL DEFAULT MD5(RANDOM() || TO_CHAR(NOW(),'yyy-m-dd hh24:mi:ss:ms:us'::TEXT))::BYTEA,
+ZBNM CHARACTER VARYING(24),
+BYYZSJ NUMERIC,
+BYHSJC NUMERIC,
+BYHSZSJ NUMERIC,
+BYWCZSJ NUMERIC,
+BYWCBFB NUMERIC,
+MNQ_FXJC_BY NUMERIC,
+MNQ_ZSJ_BY NUMERIC,
+MNQ_ZFSJ_BY NUMERIC,
+CONSTRAINT UNIQUE_ZZLL_GJGWRY_EXY_YDXLQK_SYS_C00121256 CHECK (YF IS NOT NULL) ENABLE VALIDATE,
+CONSTRAINT UNIQUE_ZZLL_GIGWRY_FXY_YDXLQK_SYS_CO0121255 CHECK (ND IS NOT NULL) ENABLE VALIDATE,
+CONSTRAINT UNIQUE_ZZLL_GIGWRY_FXY_YDXLQK_SYS_C00121259 CHECK (SYN_NM IS NOT NULL) ENABLE VALIDATE,
+CONSTRAINT UNIQUE_ZZLL_GIGWRY_FXY_YDXLQK_SYS_C00121258 CHECK (DWDM IS NOT NULL) ENABIE VALIDATE,
+CONSTRAINT UNIQUE_ZZLL_GIGWRY_FXY_YDXLQK_SYS_C00121257 CHECK (SFZHM IS NOT NULL) ENABIE VALIDATE,
+CONSTRAINT FXY_YDXLQK_FK_SFZHM FORBIGN KEY (SFZHM) REFERENCES DBSJGX.ZZLL_GJGMRY(SFZHM) ON DBLETE CASCADE,
+CONSTRAINT FK_GJGW_EXYYDXL_ZB FOREIGN KEY (ZBNM) REFERENCES DBSJGX.ZZBZ_S_TY_ZB(ZBNM) ON DELETE CASCADE
+)
+USING HEAP;
+
+
+
+CREATE OR REPLACE VIEW VIEW_EXY_YDXLQK ("SFZHM", "DWDM","FXYDH", "ND", "YF","BYJHSJ", BYZSJ, XFJXBYSJ, RJSJBY, BYHSJC, BYHSZSJ, BYWCZSJ, BYWCBFB) AS select a.sfzhm, a.dwdm, a.fxydh, a.nd,a.yf,a.byjhsj,a.byzsj,a.xfjxbysj,a.rjsjby,a.byhsjc,a.byhszsj,a.bywczsj,a.bywcbfb
+from ZzLL_GJGWRY_FXY_YDXLQK a;
+
+
+
+insert into VIEW_EXY_YDXLQK(SFZHM, DWDM,FXYDH, ND, YF,BYJHSJ, BYZSJ, XFJXBYSJ, RJSJBY, BYHSJC, BYHSZSJ, BYWCZSJ, BYWCBFB) values('123456','30414', '', '2014','01',0,0,0,'',0,0,0,0);
+
+
+
+oracle编译proc方式：
+
+1、修改配置文件pcscfg.cfg
+/u01/app/oracle/product/12.1.0.2/db_1/precomp/admin/pcscfg.cfg
+
+2、执行编译proc文件
+proc proc.pc
+
+3、编译.c文件
+gcc -o login login.c -L/u01/app/oracle/product/12.1.0.2/db_1/lib -l clntsh
+
+
+编译c文件提示sqlca头文件报错：
+gcc -o demo_test ScrollDemo1.c -L/u01/app/oracle/product/12.1.0.2/db_1/lib -I/u01/app/oracle/product/12.1.0.2/db_1/precomp/public -I/u01/app/oracle/product/12.1.0.2/db_1/rdbms/public -l clntsh
+
+gcc -o demo_test proc.c -L/u01/app/oracle/product/12.1.0.2/db_1/lib -I/u01/app/oracle/product/12.1.0.2/db_1/precomp/public -I/u01/app/oracle/product/12.1.0.2/db_1/rdbms/public -l clntsh
+
+orale登录用u及密码：
+用mdsys
+
+
+selda = sqlald(MAX_SELECT_ITEMS, MAX_NAME_SIZE, 0);
+EXEC SQL PREPARE S FROM :stmt;
+EXEC SQL DECLARE C SCROLL CURSOR FOR S;
+EXEC SQL OPEN C;
+EXEC SQL DESCRIBE SELECT LIST FOR S INTO selda;
+EXEC SQL FETCH CURRENT C USING DESCRIPTOR selda;
+
+for (sli=0; sli<selda->N; sli++)
+          printf("%.10s ", c_data[sli]);
+
+EXEC SQL CLOSE C;
+
+393220		0
+393219		-1
+393218		-2
+393217		-3
+393216		-4
+393215		-5
+
+批量查询相关代码：
+MallocBuf.cpp
+TestLock.cpp
+MallocBuf.h
+TestLock.h
+resource.h
+
+
+2023-10-31
+
+1、数据下载这块，我们当时接触的demo用例中，数据结构体的申请内存大小（结构体申请元组个数）是固定写死的，那么应用中用于接收数据的内存大小也是固定写死的吗？
+2、如果数据结构体的申请内存大小是固定写死的，那么如果数据库返回的行数超过这个结构体申请个数的话，应用内存会输出越界，那这种应用是怎么处理的？
+
+
+create table tb(v1 varchar(20), v2 int, v3 double, v4 numeric, v5 numeric(10,0), v6 numeric(5,2), v7 text);
+aaa |  1 | 1.1 |  4 |  5 | 6.20 | end
+
+insert into tb select 'aaa',generate_series(1,1000000),1.1,1.2,3,4.2,to_char(now(), 'yyyy-mm-dd');	
+
+类型											偏移长度
+char、varchar 与 varchar2 						定义长度+1			eg：varchar2(20)	//偏移21
+int												sizeof(int)
+double											sizeof(double)
+numeric与decimal								if (precision[i] == -1 || col_scale[i] > 0) //sizeof(double)   	else  //sizeof(int)
+timestamp										20
+像to_char等其他函数返回不定长字串				根据实际长度偏移带\0
+
+
+windbg调试：
+https://zhuanlan.zhihu.com/p/43972006
+
+https://www.52pojie.cn/thread-599555-1-1.html
+
+windbg 错误示例关键字：
+Bug Check 0x1E
+
+analyze输出显示章节：
+Using the !analyze Extension
+
+
+命令：
+1、设置符号路径
+.symfix
+
+.sympath 设置pdb文件夹路径
+.srcpath 设置源代码位置
+
+ImagePath 可执行文件路径
+
+
+28s现场问题记录：
+高频崩溃：
+GDisplay.exe（GDisplay Microsoft 基础类应用程序）//导致指挥系统界面不显示的进程
+GAppFrame.exe
+Tx_DataManager.exe
+YDMultiProcessShell.exe			//libuxsql.dll
+LDProc.exe（席位端雷达进程）
+ZZZH.exe
+
+
+偶现崩溃：
+HKBJSMainDll.exe
+SjlHyMultiProc.exe
+QDmzh.exe
+
+
+
+
+
+dns获取windows使用接口GetPrivateProfileStringA：文档中有记录：
+GetPrivateProfileStringA
+
+
+
+查看进程的PID：
+tasklist
+查看进程的父子关系:
+wmic process get Caption,ParentProcessId,ProcessId
+
+
+
+2023-11-15
+
+完善的proc修改路径：
+D:\mywork\mywork_2023\南京28所\优炫_001
+
+
+#pragma warning(disable : 4566)
+
+
+
+win7 dump生成路径：
+%SystemRoot%\MEMORY.DMP
+
+
+windbg线程调试方式：
+
+~*kbn			//显示所有线程信息
+
+!analyze -vv	//显示详细信息
+
+~~[threadid]s						//跳转到对应线程堆栈
+
+.  0  Id: 42fc4.43f1c Suspend: 0 Teb: 00000000`009aa000 Unfrozen
+   1  Id: 42fc4.43024 Suspend: 0 Teb: 00000000`009ba000 Unfrozen
+   2  Id: 42fc4.4446c Suspend: 0 Teb: 00000000`009c2000 Unfrozen
+   3  Id: 42fc4.42c54 Suspend: 0 Teb: 00000000`009c6000 Unfrozen
+0:000> ~~[43024]s
+
+在 64位系统上运行的32位应用程序，会由 WOW64（Windows 32-bit on Windows 64-bit）进行兼容性支持,
+需要使用 wow64exts 扩展。
+
+1、加载 wow64exts 扩展：
+.load wow64exts
+
+2、设置 Wow64 环境：
+!wow64exts.sw
+
+
+2023-11-20
+uxdb获取的返回类型：
+1、max、min			//double
+
+
+count(*) 	//uxdb使用bigint接收
+
+大对象设置：
+guc参数：
+lob_with_oid			//设置为on，  显示oid，向oid中插入数据；
+
+大对象对应的系统表：
+select * from ux_largeobject;
+
+
+select distinct B.MC,A.GZWQ,case when A.GZWQLB = '1' then '空空导弹' when A.GZWQLB = '2' then '空面导弹' when A.GZWQLB = '3' then '制导航空炸弹' else '空地导弹' end  as GZWQLB,A.SL, A.GJJL from SJGC.WQZB_ZBXN_FJWQGZ A join JCSJ.JCSJ_S_WQZB_FJ B on A.ZBNM = B.ZBNM order by B.mc;
+
+create table SJGC.WQZB_ZBXN_FJWQGZ(ZBNM VARCHAR(24), ZBMC VARCHAR(40), FJLB VARCHAR(24), GB VARCHAR(8), XH NUMERIC(8,0), GZWQ VARCHAR(100), GZWQLB VARCHAR(24), SL NUMERIC(8,0), GJJL NUMERIC(8,2));
+
+create table jcsj.jcsj_s_wqzb_fj(zbnm VARCHAR(24), xh VARCHAR(40),mc VARCHAR(80), jldw VARCHAR(20),zzbz VARCHAR(2));
+
+
+
+insert into SJGC.WQZB_ZBXN_FJWQGZ select 'aaa','bbb', 'ccc', 'aaa',generate_series(1,330), 'ddd', '空空导弹', generate_series(1,330), 1.1;
+insert into jcsj.jcsj_s_wqzb_fj select 'aaa', 'bbb', 'ccc'||generate_series(1,330), 'ddd', 'ee';
+
+select count(*) from SJGC.WQZB_ZBXN_FJWQGZ A join JCSJ.JCSJ_S_WQZB_FJ B on A.ZBNM = B.ZBNM order by B.mc;
+
+ecpg类型问题：
+date	//1、数据长度问题（wins 26位、linux 19位）	2、数据显示不正确问题
+
+28s机器IP：
+6.66.66.106
+
+2023-11-23
+
+windows exe多进程进程相关代码：
+// demo_project.cpp : 定义控制台应用程序的入口点。
+//
+#include <stdio.h>
+#include<iostream>
+#include<Windows.h>
+#include <tchar.h>
+
+
+// 函数声明
+HANDLE CreateChildProcess(LPTSTR exePath);
+
+int main() {
+    // 创建子进程1
+	LPTSTR cConDir1 = _T("C:\\Users\\ljf\\Documents\\Visual Studio 2010\\program1\\program1\\Debug\\program1.exe");
+	LPTSTR sConLin1 = new TCHAR[MAX_PATH]; // 为连接后的字符串分配足够的空间
+
+	    // 使用 wcscpy_s 安全地拷贝常量字符串到缓冲区
+    if (wcscpy_s(sConLin1, MAX_PATH, cConDir1) != 0) {
+        cerr << "Failed to copy string." << endl;
+        delete[] sConLin; // 释放分配的内存
+        return 1;
+    }
+	LPTSTR cConDir2 = _T("C:\\Users\\ljf\\Documents\\Visual Studio 2010\\program1\\program1\\Debug\\program2.exe");
+	LPTSTR sConLin2 = new TCHAR[MAX_PATH]; // 为连接后的字符串分配足够的空间
+
+	    // 使用 wcscpy_s 安全地拷贝常量字符串到缓冲区
+    if (wcscpy_s(sConLin2, MAX_PATH, cConDir2) != 0) {
+        cerr << "Failed to copy string." << endl;
+        delete[] sConLin; // 释放分配的内存
+        return 1;
+    }
+  //  HANDLE hChildProcess1 = CreateChildProcess("C:\Users\ljf\Documents\Visual Studio 2010\program1\program1\Debug\program1.exe");
+	HANDLE hChildProcess1 = CreateChildProcess(sConLin1);
+    if (hChildProcess1 == NULL) {
+        fprintf(stderr, "Error creating program1.exe: %ld\n", GetLastError());
+        return 1;
+    }
+
+    // 创建子进程2
+    //HANDLE hChildProcess2 = CreateChildProcess("C:\Users\ljf\Documents\Visual Studio 2010\program1\program1\Debug\program2.exe");
+	HANDLE hChildProcess2 = CreateChildProcess(sConLin2);
+    if (hChildProcess2 == NULL) {
+        fprintf(stderr, "Error creating program2.exe: %ld\n", GetLastError());
+        CloseHandle(hChildProcess1); // 关闭第一个子进程的句柄
+        return 1;
+    }
+
+    // 在这里可以添加等待子进程完成的代码
+
+    // 等待子进程1完成
+    WaitForSingleObject(hChildProcess1, INFINITE);
+
+    // 等待子进程2完成
+    WaitForSingleObject(hChildProcess2, INFINITE);
+
+    // 关闭子进程句柄
+    CloseHandle(hChildProcess1);
+    CloseHandle(hChildProcess2);
+
+    return 0;
+}
+
+// 创建子进程的函数
+HANDLE CreateChildProcess(LPTSTR exePath) {
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si;
+
+    // 初始化 STARTUPINFO 结构体
+    ZeroMemory(&si, sizeof(STARTUPINFO));
+    si.cb = sizeof(STARTUPINFO);
+
+    // 创建子进程
+    if (!CreateProcess(
+            NULL,             // 不使用可执行文件名，使用命令行参数中的可执行文件路径
+            exePath,   // 可执行文件路径
+            NULL,             // 进程安全描述符
+            NULL,             // 线程安全描述符
+            FALSE,            // 子进程不继承句柄
+            0,                // 创建标志
+            NULL,             // 使用父进程的环境变量
+            NULL,             // 使用父进程的当前目录
+            &si,              // STARTUPINFO 结构体
+            &pi               // 进程信息结构体
+    )) {
+        fprintf(stderr, "Error creating %s: %ld\n", exePath, GetLastError());
+        return NULL;
+    }
+
+    // 关闭主线程的句柄，因为我们不会使用它
+    CloseHandle(pi.hThread);
+
+    // 返回子进程的句柄
+    return pi.hProcess;
+}
+
+成功用例：
+#include<iostream>
+#include<Windows.h>
+#include <tchar.h>
+using namespace std;
+
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+    LPTSTR cConDir = _T("C:\\Windows\\System32\\cmd");
+    LPTSTR sConLin = new TCHAR[MAX_PATH]; // 为连接后的字符串分配足够的空间
+
+    // 使用 wcscpy_s 安全地拷贝常量字符串到缓冲区
+    if (wcscpy_s(sConLin, MAX_PATH, cConDir) != 0) {
+        cerr << "Failed to copy string." << endl;
+        delete[] sConLin; // 释放分配的内存
+        return 1;
+    }
+
+    // 使用 StringCchCat 安全地连接字符串
+  /*  if (StringCchCat(sConLin, MAX_PATH, _T("cmd.exe")) != S_OK) {
+        cerr << "Failed to concatenate strings." << endl;
+        delete[] sConLin; // 释放分配的内存
+        return 1;
+    }*/
+
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory(&si, sizeof(si));
+    ZeroMemory(&pi, sizeof(pi));
+
+    //创建一个新进程
+    if (CreateProcess(
+        NULL,    // 指向一个NULL结尾的、用来指定可执行模块的宽字节字符串
+        sConLin, // 命令行字符串
+        NULL,    // 指向一个SECURITY_ATTRIBUTES结构体，这个结构体决定是否返回的句柄可以被子进程继承。
+        NULL,    // 如果lpProcessAttributes参数为空（NULL），那么句柄不能被继承。
+        false,   // 指示新进程是否从调用进程处继承了句柄。
+        0,       // 指定附加的、用来控制优先类和进程的创建的标
+                 // CREATE_NEW_CONSOLE  新控制台打开子进程
+                 // CREATE_SUSPENDED    子进程创建后挂起，直到调用ResumeThread函数
+        NULL,    // 指向一个新进程的环境块。如果此参数为空，新进程使用调用进程的环境
+        NULL,    // 指定子进程的工作路径
+        &si,     // 决定新进程的主窗体如何显示的STARTUPINFO结构体
+        &pi      // 接收新进程的识别信息的PROCESS_INFORMATION结构体
+    ))
+    {
+        cout << "create process success" << endl;
+
+        // 下面两行关闭句柄，解除本进程和新进程的关系，不然有可能不小心调用TerminateProcess函数关掉子进程
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    }
+    else {
+        cerr << "failed to create process" << endl;
+    }
+	
+
+    // 释放分配的内存
+    delete[] sConLin;
+
+	Sleep(10000);
+
+    return 0;
+}
+
+注意点：
+1、windows代码中exe执行路径需要用转义符，eg：C:\\Users\\ljf\\Documents\\Visual Studio 2010\\program1\\program1\\Debug\\program1.exe
+2、CREATE_NEW_CONSOLE,  // 创建新控制台打开子进程
+
+
+执行 dumpbin /DEPENDENTS + 你的exe工程，输出exe依赖的dll文件，
+
+dumpbin /headers your_file.exe
+
+
+
+
+libecux.dll
+libecux_compat.dll
+libuxsql.dll
+libuxtypes.dll
+libssl-1_1.dll
+libcrypto-1_1.dll
+
+
+
+libodbcinst-2.dll
+libltdl-7.dll
+libwinpthread-1.dll
+
+2023-12-05
+
+select cast(count(*) as number(10,2)) from
+(select a1.MC ZBNM, a2.MC DZZFJLXNM,a0.DZZYT, a0.FSJMJ,a0.DZZDX,a0.SYN_NM,a0.XLGD,
+a0.ZDXLSH,a0.GRJL,a0.GRYS,a0.GRQD, ao.GRFRFW,a0.GRFGQY from kjsjgx.WQZB_ZBXN_DK_DKZYFJZSB a0,
+dbsjgx.ZZBZ_S_TY_ZB a1, kjsjgx.ZZBZ_S_KJ_FJLB a2 where a0.ZBNM=a1.ZBNM(+) and a0.DZZFJLXNM=a2.FJLBBM(+));
+
+select cast(count(*) as number(10,2)) from
+(select * from test where v2 > 0 order by v2 desc);
+
+
+
+1、总共跑了四次，每次core一两个，堆栈看着都是应用报错；
+2、今天tx应用那个exe编译过了，但是调试到qt的一个接口卡住了，跑了两次都是这种情况，然后替换oracle新编译的dll是好的；
+
+
+2023-12-06
+1、在函数
+Query_Data_File(SDatabaseInfo * stDbInfo,char * szSqlContent,char *szFileName);
+中也添加下多线程日志信息，第二个参数szSqlContent是sql语句，在函数中尾部添加标识
+2、
+可以通过屏蔽接口函数体的内容，例如：Lob_Query_Data_Mem_Proc 函数体的内容，
+排查core问题，观察下应用崩溃现象
+
+3、查看内存泄漏工具
+
+Visual Leak Detector
+
+
+2023-12-12
+问题：
+rpm包安装后，root登录后闪退；
+
+原因：
+系统库影响，因为rpm安装的数据库中使用了系统的库文件，猜测可能是libtinfo这个库导致；
+uxdb包含的系统库如下：
+libz、liblz4、libreadline、libossp-uuid、libtinfo、
+libxml2、libzstd
+
+2023-12-14
+
+deb包问题：
+
+update-rc.d报错：
+解决方法：
+1、先加载系统服务
+systemctl daemon-reload
+2、再停止服务
+sudo service uxdb stop
+
+dpkg -i + deb包		//安装命令
+dpkg -l |grep + 包名关键字			//查看已安装包
+sudo dpkg -r +包名关键字			//卸载软件包，保留配置信息
+sudo dpkg -P +包名关键字			//卸载软件包，不保留配置
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+截至12-7：
+
+不稳定崩溃；
+高频崩溃：
+LDProc.exe（席位端雷达进程）
+
+
+偶现崩溃：
+YDMultiProcessShell.exe
+Tx_DataManager.exe
+HKBJSMainDll.exe
+
+界面显示：
+有时显示正常，有时不显示，显示界面时，部分功能无法正常使用；
+
+12-4
+跑了四五次，第六次出现libuxsql的报错；
+
+12-5、12-6、12-7
+也偶现libuxsql的报错；
+
+后续计划：
+1、大对象内存插入、内存下载构造测试用例验证修改，
+内存检测目前除大对象未检测，其他均检测正常，无内存泄露问题；
+
+2、目前对于libuxsql不稳定报错，后面尝试使用vs2010编译看是否可以编译成功；
+
+3、对于非libuxsql的报错，由于目前报错基本在以上应用，通过结合客户提供源码，分析报错；
+
+
+
+2023-12-15
+
+1、修复大对象接口的自测试问题。
+2、走读代码，编写各类型自测试用例，排查其他问题；
+
+发现问题：
+1、链接信息错误，会导致core问题；
+
+
+2023-12-18
+
+1、proc与现场代码区别整理
+
+1）windows下date强转类型改为timestamp；
+
+2）proc代码需要将以下类型做下字节对齐，空和非空都要改下：
+long、long long
+
+3）main.cpp需要修改odbc获取dns域名的代码
+
+4）释放内存
+
+2023-12-19
+ecux编译命令：
+编译生成cpp文件：
+ecux user.pc -o user.cpp
+编译生成二进制文件：
+g++ user.cpp -lecux -luxsql -I/home/uxdb/uxdbinstall/dbsql/include -L/home/uxdb/uxdbinstall/dbsql/lib -o usertest -g
+
+
+压缩包包含以下内容
+一、proc.pc修改点：
+1、相对上次发送proc节点修改，以下3点现场应该已做修改，可以再对比下代码，看是否还有差异；
+a）windows下date强转类型改为timestamp；
+b）proc代码需要将以下类型做字节对齐，空和非空都要改下：
+long、long long放一块处理；
+c）断开链接释放链接串内存；
+
+2、
+a) date类型处理长度修改为9, 偏移为10；
+b) 修复大对象DESCRIBE INPUT问题，有问题接口如下：
+Lob_Insert_Data_Proc
+Lob_Update_Data_Proc
+Lob_Update_Data_Proc_mem
+Lob_Insert_Data_Proc_Mem
+Batch_Bind_Value_Proc
+
+
+二、main.cpp修改遗留dns域名获取；
+三、
+包含以下依赖库，后面有时间可以尝试将这些库进行替换，替换前记得备份之前的库；
+libecux.dll
+libecux_compat.dll
+libuxsql.dll
+libuxtypes.dll
+
+四、包含两个文档：
+兼容性说明文档；
+uxdb差异点整理；
+
+
+
+由于klyv4+x86机器部署还需要一定的时间，这次使用centos x86进行打包，理论上centos也可以用，
+可以到现场先安装试下，如果有问题，那么替换回原来的包，
+这次2122最新更新的缺陷应该与现场core问题没有关系，所以使用上次的包也不影响应用的调试；
+
+
+编译问题：
+
+
+
+configure: error: library 'xml2' (version >= 2.6.23) is required for XML support
+解决方式，安装以下库，解决思路查看config.log日志：
+liblzma-dev
+
+
+
+
+
+#189684：ECPG现场问题支持，查看分析exe调用栈，调研现场proc与ecpg函数差异问题，windows段错误问题分析文档整理+proc格式修改+ proc代码告警修改验证；
+#189684：ECPG现场问题支持，查看分析exe调用栈，分析windows date类型打印长度问题
+#189684：ECPG现场问题支持，分析proc链接报错代码，模拟windows多进程调用exe
+#189684：ECPG现场问题支持，dll工程编译，验证多字符集编译
+#189684：ECPG现场问题支持，确定windows编译是否存在线程安全参数、整理嵌入式sql依赖库、重新编译libuxsql与libecux动态库；
+#189684：ECPG现场问题支持，查看分析exe调用栈，make check windows 32客户端链接linux 64位数据库
+#189684：ECPG现场问题支持，28s现场线程oracle编译问题协助，验证ecux linux与windows make check问题；
+#189684：ECPG现场问题支持，编译vld，并在vs2010使用验证内存泄露，分别验证1、数据增删改, 2:数据下载, 3:大字段数据操作 ,4:事务方式入库 5、数据库链接断开测试；
+#180943：保密四七资质登陆界面无法登录成功，自启动脚本修改并验证、kylin10-aarch64与中科方德NFS4-x86_64打包验证
+#197635：涉密rpm包自启动脚本报错，并提交到2122、2123分支；
+#186397：二十八所项目链接报错问题windows、linux分析链接core问题、count类型返回值问题分析、大对象基本类型demo测试
+#194913、#190637代码合入2122、2123分支
+#186397：二十八所项目链接报错问题windows、linux分析链接core问题已确定、大对象类型demo测试验证， 大对象存在DESCRIBE INPUT问题，已修改验证正常；
+
+2023-12-26
+
+kylinV4+x86源设置：
+deb http://archive.kylinos.cn/kylin/KYLIN-ALL 4.0.2-desktop main restricted universe multiverse
+
+现场数据库类型：
+number(x,0)		number(x)
+number(*,x)		number(38,x)
+number(x,y)		number(x,y)
+char(x)			char(x)
+timestamp(x)	timestamp(x)
+varchar2(x)		varchar(x)
+float(x) 	float
+nvarchar2(x)	varchar(x)
+raw 			bytea
+nchar(x)		varchar(x)
+urowid(x)		varchar(x)
+nclob			clob
+rowid(10)			varchar(18)
+long raw		bytea
+date			date
+clob			clob
+blob			blob
+long			text
+
+
+存在问题的映射：
+
+nvarchar2(x)	varchar(x)
+
+rowid			varchar(18)
+
+float(x) 	float
+raw 			bytea
+urowid(x)		varchar(x)
+nclob			clob
+long raw		bytea
+long			text
+
+以上转换，如果数据用于内存下载可能都有问题，
+
+1、迁移建议修改转换：
+raw->varchar(32)
+long raw->varchar(240)
+long->varchar(240)
+
+2、float(x)超强看下x是都有哪种形式，如果是4和8的话，咱们数据库有对应的类型float4与float8，
+迁移工具可以修改为：
+float(4)->float4
+float(8)->float8
+3、
+对于以下映射关系还需确认下
+urowid(x)		varchar(x)
+nclob			clob
+
+
+avg、count、max、min、sum
+
+
+自定义枚举类型，无法强转成numeric；	（因为存储的数据类型不匹配）
+INTERVAL、INET、OID、TIMESTAMP WITH TIME ZONE 无法强转成numeric；
+
+当类型是text是，存储数据非数字时，会提示语法错误；
+INTEGER[]数组类型无法强转成numeric；
+
+LENGTH(NUMERIC)函数不存在
+
+FUNC--		TYPE1--			TYPE2--
+min			RAINBOW			INET
+max			RAINBOW			INET
+avg			INTERVAL
+
+
+oracle中，聚合函数 avg、count、max、min、sum 的处理：
+
+create table tb(v1 numeric, v2 numeric(4,3), v3 numeric(4,0), v4 float, v5 float(8), v7 date, v8 varchar(20));
+select count(v1),count(v2),count(v3),count(v4),count(v5),count(v7),count(v8) from tb;
+
+select avg(v1),avg(v2),avg(v3),avg(v4),avg(v5),avg(v8) from tb;
+select sum(v1),sum(v2),sum(v3),sum(v4),sum(v5),sum(v8) from tb;
+select max(v1),max(v2),max(v3),max(v4),max(v5),max(v8) from tb;
+select min(v1),min(v2),min(v3),min(v4),min(v5),min(v8) from tb;
+
+select avg(v7),sum(v7),max(v7),min(v7) from tb;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2123 make编译报错，执行以下命令：
+export STALIB_INSTALL=/home/uxdb/uxdb-ng/thirdparty/stalib_install
+
+
+
+
+
+
+
+
+
 
